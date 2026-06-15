@@ -37,7 +37,7 @@ export function AppNav({ displayName, avatarUrl }: AppNavProps) {
             href="/dashboard"
             className="text-[17px] font-semibold text-[#111111] tracking-tight"
           >
-            Polyglot
+            Parlo
           </Link>
           <nav className="hidden sm:flex items-center gap-1">
             {navItems.map((item) => {
@@ -57,7 +57,7 @@ export function AppNav({ displayName, avatarUrl }: AppNavProps) {
                 >
                   {item.label}
                   {isActive && (
-                    <span className="absolute bottom-0 left-3 right-3 h-[2px] bg-[#2D4A7A] rounded-full" />
+                    <span className="absolute bottom-0 left-3 right-3 h-[2px] bg-[#3730A3] rounded-full" />
                   )}
                 </Link>
               );

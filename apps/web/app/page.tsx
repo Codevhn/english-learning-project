@@ -8,7 +8,7 @@ export default function LandingPage() {
       <header className="border-b border-[#E5E5E5] bg-white">
         <div className="mx-auto max-w-5xl px-6 h-14 flex items-center justify-between">
           <span className="text-[17px] font-semibold text-[#111111] tracking-tight">
-            Polyglot
+            Parlo
           </span>
           <div className="flex items-center gap-3">
             <Link
@@ -27,12 +27,12 @@ export default function LandingPage() {
       {/* Hero */}
       <main className="flex-1 flex flex-col items-center justify-center px-6 text-center">
         <div className="max-w-2xl">
-          <p className="text-[13px] font-medium text-[#2D4A7A] tracking-widest uppercase mb-6">
+          <p className="text-[13px] font-medium text-[#3730A3] tracking-widest uppercase mb-6">
             Plataforma de aprendizaje de idiomas
           </p>
           <h1 className="text-[48px] font-semibold text-[#111111] leading-[1.15] tracking-tight mb-6">
             Aprende inglés de forma{" "}
-            <span className="text-[#2D4A7A]">estructurada y efectiva</span>
+            <span className="text-[#3730A3]">estructurada y efectiva</span>
           </h1>
           <p className="text-[18px] text-[#555555] leading-relaxed mb-10 max-w-xl mx-auto">
             Lecciones progresivas, repetición espaciada y seguimiento de progreso.
@@ -84,7 +84,7 @@ export default function LandingPage() {
       <footer className="border-t border-[#E5E5E5] py-6 px-6">
         <div className="mx-auto max-w-5xl flex items-center justify-between">
           <span className="text-[13px] text-[#999999]">
-            © 2026 Polyglot
+            © 2026 Parlo
           </span>
           <span className="text-[13px] text-[#999999]">
             Hecho con cuidado
