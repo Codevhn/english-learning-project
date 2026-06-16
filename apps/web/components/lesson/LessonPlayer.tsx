@@ -158,6 +158,7 @@ export function LessonPlayer({
         <div className="w-full max-w-lg">
           {currentExercise.exercise_type === "multiple_choice" && (
             <MultipleChoice
+              key={currentIndex}
               prompt={prompt.text}
               correctAnswer={correctAnswer.text}
               distractors={distractors ?? []}
@@ -168,6 +169,7 @@ export function LessonPlayer({
 
           {currentExercise.exercise_type === "flashcard" && (
             <Flashcard
+              key={currentIndex}
               word={prompt.text}
               subtext={prompt.subtext}
               translation={correctAnswer.text}
@@ -179,6 +181,7 @@ export function LessonPlayer({
 
           {currentExercise.exercise_type === "fill_blank" && (
             <FillBlank
+              key={currentIndex}
               sentence={prompt.text}
               accepted={correctAnswer.accepted ?? [correctAnswer.text]}
               onAnswer={handleAnswer}
@@ -188,6 +191,7 @@ export function LessonPlayer({
 
           {currentExercise.exercise_type === "translation" && (
             <Translation
+              key={currentIndex}
               prompt={prompt.text}
               accepted={correctAnswer.accepted ?? [correctAnswer.text]}
               onAnswer={handleAnswer}
