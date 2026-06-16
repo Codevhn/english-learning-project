@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Polyglot",
-    template: "%s · Polyglot",
+    default: "Parlo",
+    template: "%s · Parlo",
   },
   description: "Aprende idiomas de forma efectiva y estructurada.",
 };
