@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { CEFR_COLORS } from "@/lib/levels";
 import type { Tables } from "@/types/database";
 
 interface Props {
@@ -109,7 +110,15 @@ export default async function CourseDetailPage({ params }: Props) {
           return (
             <div key={unit.id}>
               <div className="flex items-center gap-3 mb-3">
-                <Badge>{unit.cefr_level}</Badge>
+                <Badge
+                  style={{
+                    backgroundColor: CEFR_COLORS[unit.cefr_level ?? ""]?.bg ?? "#F3F4F6",
+                    color: CEFR_COLORS[unit.cefr_level ?? ""]?.text ?? "#6B7280",
+                    borderColor: "transparent",
+                  }}
+                >
+                  {unit.cefr_level}
+                </Badge>
                 <h2 className="text-[17px] font-semibold text-[#111111]">
                   {unitTitle}
                 </h2>

@@ -63,12 +63,14 @@ export default async function DashboardPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <StatCard label="XP total" value={totalXp.toLocaleString()} />
+        <StatCard label="XP total" value={totalXp.toLocaleString()} bg="#EFF6FF" color="#1D4ED8" />
         <StatCard
           label="Racha actual"
           value={`${streak} día${streak === 1 ? "" : "s"}`}
+          bg={streak > 0 ? "#FFF7ED" : undefined}
+          color={streak > 0 ? "#C2410C" : undefined}
         />
-        <StatCard label="Lecciones" value={lessonsCompleted.toString()} />
+        <StatCard label="Lecciones" value={lessonsCompleted.toString()} bg="#ECFDF5" color="#059669" />
         <StatCard label="Palabras" value={wordsLearned.toString()} />
       </div>
 
@@ -140,12 +142,25 @@ export default async function DashboardPage() {
   );
 }
 
-function StatCard({ label, value }: { label: string; value: string }) {
+function StatCard({
+  label,
+  value,
+  bg,
+  color,
+}: {
+  label: string;
+  value: string;
+  bg?: string;
+  color?: string;
+}) {
   return (
-    <Card>
+    <Card style={bg ? { backgroundColor: bg, borderColor: "transparent" } : undefined}>
       <CardContent className="py-4">
-        <p className="text-[13px] text-[#999999] mb-1">{label}</p>
-        <p className="text-[24px] font-semibold text-[#111111] tabular-nums">
+        <p className="text-[13px] text-[#777777] mb-1">{label}</p>
+        <p
+          className="text-[24px] font-semibold tabular-nums"
+          style={{ color: color ?? "#111111" }}
+        >
           {value}
         </p>
       </CardContent>

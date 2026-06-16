@@ -1,31 +1,12 @@
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/Card";
+import { Card, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { xpToLevel } from "@/lib/levels";
 
 export const metadata: Metadata = {
   title: "Perfil",
 };
-
-function xpToLevel(xp: number): { level: number; label: string; nextLevelXp: number; progress: number } {
-  const thresholds = [0, 100, 250, 500, 1000, 2000, 4000, 7000, 11000, 16000, 22000];
-  const labels = ["Principiante", "Explorador", "Estudiante", "Aprendiz", "Practicante",
-    "Intermedio", "Avanzado", "Experto", "Maestro", "Leyenda", "Leyenda"];
-
-  let level = 0;
-  for (let i = 0; i < thresholds.length - 1; i++) {
-    if (xp >= thresholds[i]) level = i + 1;
-  }
-  level = Math.min(level, 10);
-
-  const currentThreshold = thresholds[level - 1] ?? 0;
-  const nextThreshold = thresholds[level] ?? thresholds[thresholds.length - 1];
-  const progress = nextThreshold > currentThreshold
-    ? Math.round(((xp - currentThreshold) / (nextThreshold - currentThreshold)) * 100)
-    : 100;
-
-  return { level, label: labels[level - 1] ?? "Principiante", nextLevelXp: nextThreshold, progress };
-}
 
 export default async function ProfilePage() {
   const supabase = await createClient();
@@ -58,16 +39,20 @@ export default async function ProfilePage() {
   const recent = recentResult.data ?? [];
 
   const totalXp = stats?.total_xp ?? 0;
-  const { level, label, nextLevelXp, progress } = xpToLevel(totalXp);
+  const { level, label, nextLevelXp, progress, colors } = xpToLevel(totalXp);
   const streak = stats?.current_streak ?? 0;
   const longestStreak = stats?.longest_streak ?? 0;
   const lessonsCompleted = stats?.total_lessons_completed ?? 0;
   const joinDate = profile?.created_at
-    ? new Date(profile.created_at).toLocaleDateString("es-ES", { month: "long", year: "numeric" })
+    ? new Date(profile.created_at).toLocaleDateString("es-ES", {
+        month: "long",
+        year: "numeric",
+      })
     : "";
 
   return (
     <div className="flex flex-col gap-8">
+      {/* Header */}
       <div className="flex items-start justify-between">
         <div>
           <h1 className="text-[28px] font-semibold text-[#111111] tracking-tight">
@@ -77,7 +62,12 @@ export default async function ProfilePage() {
             @{profile?.username} · Se unió en {joinDate}
           </p>
         </div>
-        <Badge>{label}</Badge>
+        <Badge
+          style={{ backgroundColor: colors.bg, color: colors.text }}
+          className="border-0"
+        >
+          {label}
+        </Badge>
       </div>
 
       {/* Level + XP */}
@@ -86,7 +76,12 @@ export default async function ProfilePage() {
           <div className="flex items-center justify-between mb-3">
             <div>
               <p className="text-[13px] text-[#999999]">Nivel {level}</p>
-              <p className="text-[17px] font-semibold text-[#111111]">{label}</p>
+              <p
+                className="text-[17px] font-semibold"
+                style={{ color: colors.text }}
+              >
+                {label}
+              </p>
             </div>
             <div className="text-right">
               <p className="text-[13px] text-[#999999]">XP total</p>
@@ -97,8 +92,8 @@ export default async function ProfilePage() {
           </div>
           <div className="h-[4px] bg-[#F1F3F5] rounded-full overflow-hidden">
             <div
-              className="h-full bg-[#1D4ED8] rounded-full transition-all duration-500"
-              style={{ width: `${progress}%` }}
+              className="h-full rounded-full transition-all duration-500"
+              style={{ width: `${progress}%`, backgroundColor: colors.text }}
             />
           </div>
           <p className="text-[12px] text-[#AAAAAA] mt-2">
@@ -109,19 +104,30 @@ export default async function ProfilePage() {
 
       {/* Stats grid */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        {[
-          { label: "Racha actual", value: `${streak} día${streak === 1 ? "" : "s"}` },
-          { label: "Mejor racha", value: `${longestStreak} día${longestStreak === 1 ? "" : "s"}` },
-          { label: "Lecciones", value: lessonsCompleted.toString() },
-          { label: "XP total", value: totalXp.toLocaleString() },
-        ].map(({ label, value }) => (
-          <Card key={label}>
-            <CardContent className="py-4">
-              <p className="text-[12px] text-[#999999] mb-1">{label}</p>
-              <p className="text-[22px] font-semibold text-[#111111] tabular-nums">{value}</p>
-            </CardContent>
-          </Card>
-        ))}
+        <StatCard
+          label="Racha actual"
+          value={`${streak} día${streak === 1 ? "" : "s"}`}
+          valueBg="#FFF7ED"
+          valueColor="#C2410C"
+        />
+        <StatCard
+          label="Mejor racha"
+          value={`${longestStreak} día${longestStreak === 1 ? "" : "s"}`}
+          valueBg="#FFFBEB"
+          valueColor="#92400E"
+        />
+        <StatCard
+          label="Lecciones"
+          value={lessonsCompleted.toString()}
+          valueBg="#ECFDF5"
+          valueColor="#059669"
+        />
+        <StatCard
+          label="XP total"
+          value={totalXp.toLocaleString()}
+          valueBg="#EFF6FF"
+          valueColor="#1D4ED8"
+        />
       </div>
 
       {/* Recent activity */}
@@ -132,13 +138,25 @@ export default async function ProfilePage() {
           </h2>
           <div className="flex flex-col gap-2">
             {recent.map((item) => {
-              const titleObj = (item.lessons as any)?.title as Record<string, string> | null;
+              const titleObj = (item.lessons as any)?.title as Record<
+                string,
+                string
+              > | null;
               const title = titleObj?.["es"] ?? titleObj?.["en"] ?? "Lección";
               const date = item.completed_at
                 ? new Date(item.completed_at).toLocaleDateString("es-ES", {
-                    day: "numeric", month: "short",
+                    day: "numeric",
+                    month: "short",
                   })
                 : "";
+              const score = item.score ?? 0;
+              const scoreColor =
+                score >= 80
+                  ? "#059669"
+                  : score >= 60
+                  ? "#D97706"
+                  : "#B91C1C";
+
               return (
                 <Card key={item.lesson_id}>
                   <CardContent className="py-3 flex items-center justify-between">
@@ -147,7 +165,12 @@ export default async function ProfilePage() {
                       <p className="text-[14px] text-[#111111]">{title}</p>
                     </div>
                     <div className="flex items-center gap-3 shrink-0">
-                      <span className="text-[13px] text-[#999999]">{item.score}%</span>
+                      <span
+                        className="text-[13px] font-medium tabular-nums"
+                        style={{ color: scoreColor }}
+                      >
+                        {score}%
+                      </span>
                       <span className="text-[12px] text-[#CCCCCC]">{date}</span>
                     </div>
                   </CardContent>
@@ -158,5 +181,31 @@ export default async function ProfilePage() {
         </div>
       )}
     </div>
+  );
+}
+
+function StatCard({
+  label,
+  value,
+  valueBg,
+  valueColor,
+}: {
+  label: string;
+  value: string;
+  valueBg: string;
+  valueColor: string;
+}) {
+  return (
+    <Card style={{ backgroundColor: valueBg, borderColor: "transparent" }}>
+      <CardContent className="py-4">
+        <p className="text-[12px] text-[#777777] mb-1">{label}</p>
+        <p
+          className="text-[22px] font-semibold tabular-nums"
+          style={{ color: valueColor }}
+        >
+          {value}
+        </p>
+      </CardContent>
+    </Card>
   );
 }
