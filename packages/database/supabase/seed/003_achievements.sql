@@ -1,6 +1,12 @@
 -- =============================================
--- Seed: Achievement definitions
+-- Seed: Achievement definitions (idempotent)
+-- Removes legacy records from initial seed and upserts correct definitions.
 -- =============================================
+
+-- Remove deprecated slugs from the original seed that used wrong condition_types
+delete from public.achievements where slug in ('words-50', 'words-100', 'perfect-lesson');
+
+-- Upsert all achievement definitions
 insert into public.achievements (id, slug, title, description, icon, condition_type, condition_value)
 values
   -- Lecciones completadas
@@ -86,4 +92,10 @@ values
     '{"es": "Perfeccionista", "en": "Perfectionist"}',
     '{"es": "Completaste una lección con 100% de aciertos", "en": "Completed a lesson with 100% accuracy"}',
     '💎', 'perfect_lesson', 1
-  );
+  )
+on conflict (slug) do update set
+  title           = excluded.title,
+  description     = excluded.description,
+  icon            = excluded.icon,
+  condition_type  = excluded.condition_type,
+  condition_value = excluded.condition_value;
