@@ -27,17 +27,21 @@ interface Props {
   lessonTitle: string;
   theoryContent: TheoryContent;
   onComplete: () => void;
+  onExit: () => void;
 }
 
-export function LessonLearnScreen({ lessonTitle, theoryContent, onComplete }: Props) {
+export function LessonLearnScreen({ lessonTitle, theoryContent, onComplete, onExit }: Props) {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Top bar */}
       <div className="sticky top-0 z-10 bg-white border-b border-[#F1F3F5] px-6 py-4">
         <div className="max-w-2xl mx-auto flex items-center justify-between">
-          <span className="text-[12px] font-semibold text-[#AAAAAA] uppercase tracking-widest">
-            Aprender
-          </span>
+          <button
+            onClick={onExit}
+            className="text-[14px] text-[#AAAAAA] hover:text-[#555555] transition-colors"
+          >
+            ← Salir
+          </button>
           <span className="text-[14px] font-medium text-[#111111]">{lessonTitle}</span>
         </div>
       </div>

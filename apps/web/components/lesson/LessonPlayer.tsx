@@ -127,6 +127,7 @@ export function LessonPlayer({
         lessonTitle={lessonTitle}
         theoryContent={theoryContent}
         onComplete={() => setPhase({ name: "exercising" })}
+        onExit={() => router.back()}
       />
     );
   }
