@@ -23,10 +23,10 @@ const Button = forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const base =
-      "inline-flex items-center justify-center font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3730A3] focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed rounded-[4px]";
+      "inline-flex items-center justify-center font-medium transition-colors duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#1D4ED8] focus-visible:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed rounded-[4px]";
 
     const variants = {
-      primary: "bg-[#3730A3] text-white hover:bg-[#312E81]",
+      primary: "bg-[#1D4ED8] text-white hover:bg-[#1E40AF]",
       secondary:
         "bg-white text-[#111111] border border-[#E5E5E5] hover:bg-[#F8F8F8]",
       ghost: "text-[#555555] hover:bg-[#F0F0F0] hover:text-[#111111]",

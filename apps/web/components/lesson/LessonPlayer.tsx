@@ -135,7 +135,7 @@ export function LessonPlayer({
       {/* Progress bar */}
       <div className="h-[3px] bg-[#E9ECEF]">
         <div
-          className="h-full bg-[#3730A3] transition-all duration-300 ease-out"
+          className="h-full bg-[#1D4ED8] transition-all duration-300 ease-out"
           style={{ width: `${progressPct}%` }}
         />
       </div>

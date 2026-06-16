@@ -57,7 +57,7 @@ export function AppNav({ displayName, avatarUrl }: AppNavProps) {
                 >
                   {item.label}
                   {isActive && (
-                    <span className="absolute bottom-0 left-3 right-3 h-[2px] bg-[#3730A3] rounded-full" />
+                    <span className="absolute bottom-0 left-3 right-3 h-[2px] bg-[#1D4ED8] rounded-full" />
                   )}
                 </Link>
               );

@@ -15,13 +15,13 @@ export function LessonComplete({ score, xpEarned, courseSlug }: LessonCompletePr
   return (
     <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
       <div className="text-center max-w-sm w-full">
-        <div className="w-16 h-16 rounded-full bg-[#EEF2FF] flex items-center justify-center mx-auto mb-6">
+        <div className="w-16 h-16 rounded-full bg-[#EFF6FF] flex items-center justify-center mx-auto mb-6">
           <svg
             width="32"
             height="32"
             viewBox="0 0 24 24"
             fill="none"
-            stroke="#3730A3"
+            stroke="#1D4ED8"
             strokeWidth="2.5"
             strokeLinecap="round"
             strokeLinejoin="round"
@@ -44,9 +44,9 @@ export function LessonComplete({ score, xpEarned, courseSlug }: LessonCompletePr
             <p className="text-[12px] text-[#999999] mb-1">Precisión</p>
             <p className="text-[26px] font-semibold text-[#111111]">{score}%</p>
           </div>
-          <div className="bg-[#EEF2FF] rounded-[6px] p-4 text-center">
-            <p className="text-[12px] text-[#7C6AD6] mb-1">XP ganado</p>
-            <p className="text-[26px] font-semibold text-[#3730A3]">+{xpEarned}</p>
+          <div className="bg-[#EFF6FF] rounded-[6px] p-4 text-center">
+            <p className="text-[12px] text-[#3B82F6] mb-1">XP ganado</p>
+            <p className="text-[26px] font-semibold text-[#1D4ED8]">+{xpEarned}</p>
           </div>
         </div>
 

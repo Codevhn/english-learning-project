@@ -27,12 +27,12 @@ export default function LandingPage() {
       {/* Hero */}
       <main className="flex-1 flex flex-col items-center justify-center px-6 text-center">
         <div className="max-w-2xl">
-          <p className="text-[13px] font-medium text-[#3730A3] tracking-widest uppercase mb-6">
+          <p className="text-[13px] font-medium text-[#1D4ED8] tracking-widest uppercase mb-6">
             Plataforma de aprendizaje de idiomas
           </p>
           <h1 className="text-[48px] font-semibold text-[#111111] leading-[1.15] tracking-tight mb-6">
             Aprende inglés de forma{" "}
-            <span className="text-[#3730A3]">estructurada y efectiva</span>
+            <span className="text-[#1D4ED8]">estructurada y efectiva</span>
           </h1>
           <p className="text-[18px] text-[#555555] leading-relaxed mb-10 max-w-xl mx-auto">
             Lecciones progresivas, repetición espaciada y seguimiento de progreso.

@@ -80,7 +80,7 @@ export default async function DashboardPage() {
           </h2>
           <Link
             href="/courses"
-            className="text-[14px] text-[#3730A3] hover:underline"
+            className="text-[14px] text-[#1D4ED8] hover:underline"
           >
             Ver todos
           </Link>
