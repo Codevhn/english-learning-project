@@ -29,3 +29,8 @@ alter table public.lessons
 
 create index lessons_module_id_idx on public.lessons(module_id);
 create index modules_unit_id_idx   on public.modules(unit_id);
+
+-- Expand lesson_type check constraint to include new types used in A1 curriculum
+alter table public.lessons drop constraint lessons_lesson_type_check;
+alter table public.lessons add constraint lessons_lesson_type_check
+  check (lesson_type in ('vocabulary','grammar','listening','reading','speaking','mixed','theory_practice','conversation'));
