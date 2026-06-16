@@ -189,8 +189,8 @@ values
   (
     '00000000-0000-0001-0000-000000000003', 10, 'translation',
     '{"text": "Traduce al inglés: \"Tengo veinte años.\""}',
-    '{"text": "I am twenty years old.", "accepted": ["I am twenty years old.", "I am twenty years old", "i am twenty years old.", "I'm twenty years old.", "I am 20 years old.", "I am 20 years old"]}',
+    '{"text": "I am twenty years old.", "accepted": ["I am twenty years old.", "I am twenty years old", "i am twenty years old.", "I''m twenty years old.", "I am 20 years old.", "I am 20 years old"]}',
     null,
-    '{"es": "\"I am twenty years old\" o \"I\\'m twenty\" son las formas correctas. En inglés no se usa el verbo tener (have) para la edad, sino el verbo ser/estar (be)."}',
+    '{"es": "\"I am twenty years old\" o \"I''m twenty\" son las formas correctas. En inglés no se usa el verbo tener (have) para la edad, sino el verbo ser/estar (be)."}',
     '{numbers,grammar,A1}'
   );
