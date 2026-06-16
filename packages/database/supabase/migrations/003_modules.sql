@@ -27,6 +27,15 @@ alter table public.lessons
   add column module_id    uuid references public.modules(id) on delete cascade,
   add column theory_content jsonb;
 
+-- The old constraints assumed Unit → Lesson (flat).
+-- In the new architecture lessons live under modules, so:
+--   (unit_id, order_index) → multiple modules can each have order_index = 1
+--   (unit_id, slug)        → slugs only need to be unique within a module
+alter table public.lessons drop constraint lessons_unit_id_order_index_key;
+alter table public.lessons drop constraint lessons_unit_id_slug_key;
+alter table public.lessons add constraint lessons_module_id_order_index_key
+  unique (module_id, order_index);
+
 create index lessons_module_id_idx on public.lessons(module_id);
 create index modules_unit_id_idx   on public.modules(unit_id);
 

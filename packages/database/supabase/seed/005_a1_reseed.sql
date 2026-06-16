@@ -3,22 +3,21 @@
 -- Run AFTER 001_initial_schema.sql, 002_seed.sql, 003_modules.sql
 
 -- ===========================================================================
--- CLEANUP: Remove existing A1 content (cascade order: exercises → lessons → modules)
+-- CLEANUP: Remove ALL existing A1 content (old flat lessons + new module-based)
 -- ===========================================================================
 
+-- Delete exercises for ALL A1 lessons (both old module_id=NULL and new)
 DELETE FROM exercises
 WHERE lesson_id IN (
-  SELECT l.id FROM lessons l
-  JOIN modules m ON l.module_id = m.id
-  WHERE m.unit_id = '00000000-0000-0000-0001-000000000001'
-);
-
-DELETE FROM lessons
-WHERE module_id IN (
-  SELECT id FROM modules
+  SELECT id FROM lessons
   WHERE unit_id = '00000000-0000-0000-0001-000000000001'
 );
 
+-- Delete ALL A1 lessons regardless of whether they have a module_id
+DELETE FROM lessons
+WHERE unit_id = '00000000-0000-0000-0001-000000000001';
+
+-- Delete all A1 modules
 DELETE FROM modules
 WHERE unit_id = '00000000-0000-0000-0001-000000000001';
 
