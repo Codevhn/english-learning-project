@@ -12,6 +12,12 @@ import { Button } from "@/components/ui/Button";
 
 type Exercise = Tables<"exercises">;
 
+interface NewAchievement {
+  slug: string;
+  title: string;
+  icon: string;
+}
+
 type Phase =
   | { name: "exercising" }
   | {
@@ -21,7 +27,7 @@ type Phase =
       explanation?: string;
       isFlashcard: boolean;
     }
-  | { name: "completed"; score: number; xpEarned: number };
+  | { name: "completed"; score: number; xpEarned: number; newAchievements: NewAchievement[] };
 
 interface LessonPlayerProps {
   lessonId: string;
@@ -87,6 +93,7 @@ export function LessonPlayer({
       const finalScore = Math.round((correctCount / exercises.length) * 100);
       let xpEarned = xpReward;
 
+      let newAchievements: NewAchievement[] = [];
       try {
         const res = await fetch("/api/progress/complete-lesson", {
           method: "POST",
@@ -96,10 +103,11 @@ export function LessonPlayer({
         if (res.ok) {
           const data = await res.json();
           xpEarned = data.xpEarned ?? xpReward;
+          newAchievements = data.newAchievements ?? [];
         }
       } catch {}
 
-      setPhase({ name: "completed", score: finalScore, xpEarned });
+      setPhase({ name: "completed", score: finalScore, xpEarned, newAchievements });
       setIsCompleting(false);
     } else {
       setCurrentIndex((i) => i + 1);
@@ -113,6 +121,7 @@ export function LessonPlayer({
         score={phase.score}
         xpEarned={phase.xpEarned}
         courseSlug={courseSlug}
+        newAchievements={phase.newAchievements}
       />
     );
   }

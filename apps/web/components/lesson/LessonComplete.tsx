@@ -3,13 +3,20 @@
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 
+interface NewAchievement {
+  slug: string;
+  title: string;
+  icon: string;
+}
+
 interface LessonCompleteProps {
   score: number;
   xpEarned: number;
   courseSlug: string;
+  newAchievements?: NewAchievement[];
 }
 
-export function LessonComplete({ score, xpEarned, courseSlug }: LessonCompleteProps) {
+export function LessonComplete({ score, xpEarned, courseSlug, newAchievements = [] }: LessonCompleteProps) {
   const router = useRouter();
 
   return (
@@ -39,7 +46,7 @@ export function LessonComplete({ score, xpEarned, courseSlug }: LessonCompletePr
             : "Sigue practicando para mejorar tu precisión."}
         </p>
 
-        <div className="grid grid-cols-2 gap-4 mb-8">
+        <div className="grid grid-cols-2 gap-4 mb-6">
           <div className="bg-[#F8F9FA] rounded-[6px] p-4 text-center">
             <p className="text-[12px] text-[#999999] mb-1">Precisión</p>
             <p className="text-[26px] font-semibold text-[#111111]">{score}%</p>
@@ -49,6 +56,25 @@ export function LessonComplete({ score, xpEarned, courseSlug }: LessonCompletePr
             <p className="text-[26px] font-semibold text-[#1D4ED8]">+{xpEarned}</p>
           </div>
         </div>
+
+        {newAchievements.length > 0 && (
+          <div className="mb-6">
+            <p className="text-[12px] text-[#999999] uppercase tracking-wide mb-2">
+              Logros desbloqueados
+            </p>
+            <div className="flex flex-col gap-2">
+              {newAchievements.map((a) => (
+                <div
+                  key={a.slug}
+                  className="flex items-center gap-3 bg-[#FFFBEB] border border-[#FEF3C7] rounded-[6px] px-3 py-2.5 text-left"
+                >
+                  <span className="text-[22px] shrink-0">{a.icon}</span>
+                  <p className="text-[14px] font-medium text-[#92400E]">{a.title}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <div className="flex flex-col gap-3">
           <Button

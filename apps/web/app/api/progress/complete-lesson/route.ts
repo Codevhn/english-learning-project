@@ -74,13 +74,11 @@ export async function POST(request: Request) {
     { onConflict: "user_id,lesson_id" }
   );
 
-  if (stats) {
-    const streakUpdate = calcStreak(
-      stats.last_activity_date,
-      stats.current_streak,
-      stats.longest_streak
-    );
+  const streakUpdate = stats
+    ? calcStreak(stats.last_activity_date, stats.current_streak, stats.longest_streak)
+    : { current_streak: 1, longest_streak: 1, last_activity_date: new Date().toISOString().split("T")[0] };
 
+  if (stats) {
     await supabase
       .from("user_stats")
       .update({
@@ -94,5 +92,42 @@ export async function POST(request: Request) {
       .eq("user_id", user.id);
   }
 
-  return NextResponse.json({ xpEarned });
+  // Check and award achievements
+  const newTotalXp = (stats?.total_xp ?? 0) + xpEarned;
+  const newLessonsCompleted = isFirstCompletion
+    ? (stats?.total_lessons_completed ?? 0) + 1
+    : (stats?.total_lessons_completed ?? 0);
+  const newStreak = streakUpdate.current_streak;
+
+  const [achievementsResult, earnedResult] = await Promise.all([
+    supabase.from("achievements").select("id, slug, title, icon, condition_type, condition_value"),
+    supabase.from("user_achievements").select("achievement_id").eq("user_id", user.id),
+  ]);
+
+  const earnedIds = new Set((earnedResult.data ?? []).map((a) => a.achievement_id));
+
+  const toAward = (achievementsResult.data ?? []).filter((a) => {
+    if (earnedIds.has(a.id)) return false;
+    switch (a.condition_type) {
+      case "lessons_completed": return newLessonsCompleted >= a.condition_value;
+      case "streak":            return newStreak >= a.condition_value;
+      case "total_xp":          return newTotalXp >= a.condition_value;
+      case "perfect_lesson":    return (score ?? 0) === 100;
+      default:                  return false;
+    }
+  });
+
+  if (toAward.length > 0) {
+    await supabase
+      .from("user_achievements")
+      .insert(toAward.map((a) => ({ user_id: user.id, achievement_id: a.id })));
+  }
+
+  const newAchievements = toAward.map((a) => ({
+    slug: a.slug,
+    title: (a.title as Record<string, string>)?.es ?? a.slug,
+    icon: a.icon,
+  }));
+
+  return NextResponse.json({ xpEarned, newAchievements });
 }

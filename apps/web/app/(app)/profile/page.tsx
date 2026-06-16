@@ -14,7 +14,7 @@ export default async function ProfilePage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const [profileResult, statsResult, recentResult] = await Promise.all([
+  const [profileResult, statsResult, recentResult, achievementsResult] = await Promise.all([
     supabase
       .from("profiles")
       .select("display_name, username, created_at")
@@ -32,11 +32,17 @@ export default async function ProfilePage() {
       .eq("status", "completed")
       .order("completed_at", { ascending: false })
       .limit(5),
+    supabase
+      .from("user_achievements")
+      .select("achievement_id, earned_at, achievements(slug, title, description, icon)")
+      .eq("user_id", user!.id)
+      .order("earned_at", { ascending: false }),
   ]);
 
   const profile = profileResult.data;
   const stats = statsResult.data;
   const recent = recentResult.data ?? [];
+  const achievements = achievementsResult.data ?? [];
 
   const totalXp = stats?.total_xp ?? 0;
   const { level, label, nextLevelXp, progress, colors } = xpToLevel(totalXp);
@@ -128,6 +134,46 @@ export default async function ProfilePage() {
           valueBg="#EFF6FF"
           valueColor="#1D4ED8"
         />
+      </div>
+
+      {/* Achievements */}
+      <div>
+        <h2 className="text-[17px] font-semibold text-[#111111] mb-3">
+          Logros{achievements.length > 0 ? ` (${achievements.length})` : ""}
+        </h2>
+        {achievements.length === 0 ? (
+          <div className="rounded-[6px] border border-[#E5E5E5] bg-[#FAFAFA] py-8 text-center">
+            <p className="text-[14px] text-[#999999]">
+              Completa lecciones para desbloquear logros.
+            </p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {achievements.map((ua) => {
+              const ach = ua.achievements as any;
+              const title = (ach?.title as Record<string, string>)?.es ?? "";
+              const desc = (ach?.description as Record<string, string>)?.es ?? "";
+              const icon = ach?.icon as string ?? "🏅";
+              const date = new Date(ua.earned_at).toLocaleDateString("es-ES", {
+                day: "numeric",
+                month: "short",
+              });
+              return (
+                <div
+                  key={ua.achievement_id}
+                  className="rounded-[6px] border border-[#E5E5E5] bg-white px-4 py-3"
+                  title={desc}
+                >
+                  <div className="text-[28px] mb-2">{icon}</div>
+                  <p className="text-[13px] font-semibold text-[#111111] leading-tight mb-0.5">
+                    {title}
+                  </p>
+                  <p className="text-[11px] text-[#AAAAAA]">{date}</p>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Recent activity */}
