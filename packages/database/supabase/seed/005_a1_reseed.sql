@@ -68,7 +68,7 @@ INSERT INTO exercises (id, lesson_id, order_index, exercise_type, prompt, correc
 ('00000003-0001-0001-0004-000000000001', '00000002-0000-0000-0001-000000000001', 4, 'multiple_choice', '{"text": "¿Qué vocal tiene sonido LARGO en la palabra ''bike''?"}'::jsonb, '{"text": "La I, que suena /aɪ/ como en ''eye''"}'::jsonb, '["La B, que es consonante y no tiene sonido vocal", "La E, aunque es silenciosa al final", "La I tiene sonido corto /ɪ/ como en ''sit''"]'::jsonb, '{"es": "En ''bike'', la I tiene sonido largo /aɪ/ gracias a la E final silenciosa. La regla magic E: consonante + vocal + consonante + E = vocal larga."}'::jsonb);
 
 INSERT INTO exercises (id, lesson_id, order_index, exercise_type, prompt, correct_answer, distractors, explanation) VALUES
-('00000003-0001-0001-0005-000000000001', '00000002-0000-0000-0001-000000000001', 5, 'fill_blank', '{"text": "The ___ is on the bed. (cup/cama — usa la palabra correcta para ''cama'')"}'::jsonb, '{"text": "book", "accepted": ["book"]}'::jsonb, NULL, NULL);
+('00000003-0001-0001-0005-000000000001', '00000002-0000-0000-0001-000000000001', 5, 'fill_blank', '{"text": "I sleep in a ___. (cama en inglés)"}'::jsonb, '{"text": "bed", "accepted": ["bed"]}'::jsonb, NULL, NULL);
 
 INSERT INTO exercises (id, lesson_id, order_index, exercise_type, prompt, correct_answer, distractors, explanation) VALUES
 ('00000003-0001-0001-0006-000000000001', '00000002-0000-0000-0001-000000000001', 6, 'fill_blank', '{"text": "I ride my ___ to school every day. (bicicleta en inglés)"}'::jsonb, '{"text": "bike", "accepted": ["bike"]}'::jsonb, NULL, NULL);
