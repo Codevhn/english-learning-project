@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BookOpen, CheckCircle2 } from "lucide-react";
 
 export function ReviewCard({ reviewCount }: { reviewCount: number }) {
   const active = reviewCount > 0;
@@ -29,9 +30,17 @@ export function ReviewCard({ reviewCount }: { reviewCount: number }) {
             </span>
           </div>
         </div>
-        <span className="text-[32px] leading-none mt-1">
-          {active ? "📚" : "✅"}
-        </span>
+        <div
+          className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${
+            active ? "bg-[#DBEAFE]" : "bg-[#F1F3F5]"
+          }`}
+        >
+          {active ? (
+            <BookOpen className="w-5 h-5 text-[#1D4ED8]" strokeWidth={2} />
+          ) : (
+            <CheckCircle2 className="w-5 h-5 text-[#AAAAAA]" strokeWidth={2} />
+          )}
+        </div>
       </div>
       {active ? (
         <Link

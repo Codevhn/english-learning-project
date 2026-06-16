@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { Check } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
@@ -191,7 +192,11 @@ export default async function CourseDetailPage({ params }: Props) {
                                 : "bg-[#EFF6FF] text-[#1D4ED8]"
                             }`}
                           >
-                            {isModuleComplete ? "✓" : mod.order_index}
+                            {isModuleComplete ? (
+                              <Check className="w-4 h-4" strokeWidth={2.5} />
+                            ) : (
+                              mod.order_index
+                            )}
                           </div>
                           <div className="min-w-0 flex-1">
                             <p className="text-[15px] font-medium text-[#111111] truncate">

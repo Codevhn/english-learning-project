@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { xpToLevel } from "@/lib/levels";
+import { getAchievementIcon } from "@/lib/achievementIcons";
 
 export const metadata: Metadata = {
   title: "Perfil",
@@ -153,7 +154,7 @@ export default async function ProfilePage() {
               const ach = ua.achievements as any;
               const title = (ach?.title as Record<string, string>)?.es ?? "";
               const desc = (ach?.description as Record<string, string>)?.es ?? "";
-              const icon = ach?.icon as string ?? "🏅";
+              const Icon = getAchievementIcon(ach?.icon as string | undefined);
               const date = new Date(ua.earned_at).toLocaleDateString("es-ES", {
                 day: "numeric",
                 month: "short",
@@ -164,7 +165,9 @@ export default async function ProfilePage() {
                   className="rounded-[6px] border border-[#E5E5E5] bg-white px-4 py-3"
                   title={desc}
                 >
-                  <div className="text-[28px] mb-2">{icon}</div>
+                  <div className="w-9 h-9 rounded-full bg-[#FFFBEB] flex items-center justify-center mb-2">
+                    <Icon className="w-[18px] h-[18px] text-[#D97706]" strokeWidth={2} />
+                  </div>
                   <p className="text-[13px] font-semibold text-[#111111] leading-tight mb-0.5">
                     {title}
                   </p>

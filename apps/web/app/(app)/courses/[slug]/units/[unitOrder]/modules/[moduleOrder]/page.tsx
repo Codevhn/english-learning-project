@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { Check } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 
@@ -134,7 +135,11 @@ export default async function ModulePage({ params }: Props) {
                         : "bg-[#F3F4F6] text-[#9CA3AF]"
                     }`}
                   >
-                    {isCompleted ? "✓" : idx + 1}
+                    {isCompleted ? (
+                      <Check className="w-3.5 h-3.5" strokeWidth={2.5} />
+                    ) : (
+                      idx + 1
+                    )}
                   </div>
                   <div className="min-w-0">
                     <p className="text-[15px] font-medium text-[#111111] truncate">

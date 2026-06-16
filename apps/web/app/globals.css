@@ -3,6 +3,7 @@
 @theme {
   --font-sans: var(--font-geist-sans), system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), monospace;
+  --font-serif: var(--font-source-serif), Georgia, serif;
 
   /* Brand */
   --color-accent: #1D4ED8;

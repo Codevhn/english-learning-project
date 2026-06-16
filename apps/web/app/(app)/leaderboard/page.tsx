@@ -32,7 +32,11 @@ export default async function LeaderboardPage() {
   }));
 
   const currentUserEntry = ranked.find((e) => e.isCurrentUser);
-  const top3 = ["🥇", "🥈", "🥉"];
+  const RANK_COLORS: Record<number, { bg: string; text: string }> = {
+    1: { bg: "#FEF3C7", text: "#92400E" },
+    2: { bg: "#F1F5F9", text: "#475569" },
+    3: { bg: "#FFEDD5", text: "#C2410C" },
+  };
 
   return (
     <div className="flex flex-col gap-8">
@@ -91,9 +95,21 @@ export default async function LeaderboardPage() {
             >
               <CardContent className="py-3 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <span className="text-[14px] tabular-nums w-8 shrink-0 text-center">
-                    {entry.rank <= 3 ? top3[entry.rank - 1] : `#${entry.rank}`}
-                  </span>
+                  {entry.rank <= 3 ? (
+                    <span
+                      className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-[13px] font-semibold tabular-nums"
+                      style={{
+                        backgroundColor: RANK_COLORS[entry.rank].bg,
+                        color: RANK_COLORS[entry.rank].text,
+                      }}
+                    >
+                      {entry.rank}
+                    </span>
+                  ) : (
+                    <span className="text-[14px] tabular-nums w-8 shrink-0 text-center text-[#999999]">
+                      #{entry.rank}
+                    </span>
+                  )}
                   <p
                     className={`text-[14px] font-medium ${
                       entry.isCurrentUser ? "text-[#1D4ED8]" : "text-[#111111]"

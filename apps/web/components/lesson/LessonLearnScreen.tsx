@@ -1,5 +1,6 @@
 "use client";
 
+import { AlertTriangle, Info, Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 
 interface ExampleItem {
@@ -48,9 +49,9 @@ export function LessonLearnScreen({ lessonTitle, theoryContent, onComplete, onEx
 
       {/* Scrollable content */}
       <div className="flex-1 px-6 py-10">
-        <div className="max-w-2xl mx-auto flex flex-col gap-8">
+        <div className="max-w-2xl mx-auto flex flex-col gap-8 font-serif">
           {/* Intro */}
-          <p className="text-[17px] text-[#333333] leading-relaxed">
+          <p className="text-[18px] text-[#222222] leading-relaxed">
             {theoryContent.intro}
           </p>
 
@@ -58,19 +59,19 @@ export function LessonLearnScreen({ lessonTitle, theoryContent, onComplete, onEx
           {theoryContent.sections.map((section, i) => (
             <div key={i} className="flex flex-col gap-3">
               {section.title && (
-                <h3 className="text-[11px] font-semibold text-[#AAAAAA] uppercase tracking-widest">
+                <h3 className="text-[21px] font-semibold text-[#111111] tracking-tight">
                   {section.title}
                 </h3>
               )}
 
               {section.type === "explanation" && (
-                <p className="text-[15px] text-[#333333] leading-relaxed">
+                <p className="text-[16px] text-[#222222] leading-relaxed">
                   {section.text}
                 </p>
               )}
 
               {section.type === "table" && section.headers && section.rows && (
-                <div className="rounded-[6px] border border-[#E5E5E5] overflow-hidden">
+                <div className="rounded-[8px] border border-[#E5E5E5] overflow-hidden font-sans">
                   <table className="w-full text-[14px]">
                     <thead>
                       <tr className="bg-[#F8F9FA] border-b border-[#E5E5E5]">
@@ -112,18 +113,23 @@ export function LessonLearnScreen({ lessonTitle, theoryContent, onComplete, onEx
               )}
 
               {section.type === "examples" && section.items && (
-                <div className="flex flex-col gap-4">
+                <div className="grid sm:grid-cols-2 gap-3">
                   {section.items.map((item, j) => (
-                    <div key={j} className="border-l-[3px] border-[#1D4ED8] pl-4">
+                    <div
+                      key={j}
+                      className="rounded-[10px] border border-[#E9E9E9] bg-white px-5 py-4"
+                    >
                       {item.label && (
-                        <p className="text-[11px] font-semibold text-[#AAAAAA] uppercase tracking-wide mb-1">
+                        <span className="inline-block font-sans text-[10px] font-semibold text-[#1D4ED8] bg-[#EEF2FF] rounded-full px-2.5 py-1 uppercase tracking-wide mb-2.5">
                           {item.label}
-                        </p>
+                        </span>
                       )}
-                      <p className="text-[17px] font-medium text-[#111111] leading-snug">
+                      <p className="text-[18px] text-[#111111] leading-snug">
                         {item.en}
                       </p>
-                      <p className="text-[14px] text-[#777777] mt-0.5">{item.es}</p>
+                      <p className="font-sans text-[13px] text-[#999999] mt-2 pt-2 border-t border-[#F2F2F2]">
+                        {item.es}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -131,16 +137,32 @@ export function LessonLearnScreen({ lessonTitle, theoryContent, onComplete, onEx
 
               {section.type === "note" && section.text && (
                 <div
-                  className={`rounded-[6px] px-4 py-3.5 border-l-4 ${
+                  className={`rounded-[10px] border px-4 py-3.5 flex items-start gap-3 ${
                     section.variant === "warning"
-                      ? "bg-[#FFF7ED] border-[#C2410C]"
+                      ? "bg-[#FFF7ED] border-[#FBDDB3]"
                       : section.variant === "tip"
-                      ? "bg-[#EFF6FF] border-[#1D4ED8]"
-                      : "bg-[#F8F9FA] border-[#CCCCCC]"
+                      ? "bg-[#EFF6FF] border-[#BFDBFE]"
+                      : "bg-[#F8F9FA] border-[#E9E9E9]"
                   }`}
                 >
+                  {section.variant === "warning" ? (
+                    <AlertTriangle
+                      className="w-[18px] h-[18px] mt-0.5 shrink-0 text-[#C2410C]"
+                      strokeWidth={2}
+                    />
+                  ) : section.variant === "tip" ? (
+                    <Lightbulb
+                      className="w-[18px] h-[18px] mt-0.5 shrink-0 text-[#1D4ED8]"
+                      strokeWidth={2}
+                    />
+                  ) : (
+                    <Info
+                      className="w-[18px] h-[18px] mt-0.5 shrink-0 text-[#999999]"
+                      strokeWidth={2}
+                    />
+                  )}
                   <p
-                    className={`text-[14px] leading-relaxed ${
+                    className={`font-sans text-[14px] leading-relaxed ${
                       section.variant === "warning"
                         ? "text-[#92400E]"
                         : section.variant === "tip"
@@ -148,13 +170,6 @@ export function LessonLearnScreen({ lessonTitle, theoryContent, onComplete, onEx
                         : "text-[#555555]"
                     }`}
                   >
-                    <span className="mr-1.5">
-                      {section.variant === "warning"
-                        ? "⚠"
-                        : section.variant === "tip"
-                        ? "💡"
-                        : "ℹ"}
-                    </span>
                     {section.text}
                   </p>
                 </div>

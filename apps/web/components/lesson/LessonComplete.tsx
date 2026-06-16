@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
+import { getAchievementIcon } from "@/lib/achievementIcons";
 
 interface NewAchievement {
   slug: string;
@@ -63,15 +64,20 @@ export function LessonComplete({ score, xpEarned, courseSlug, newAchievements = 
               Logros desbloqueados
             </p>
             <div className="flex flex-col gap-2">
-              {newAchievements.map((a) => (
-                <div
-                  key={a.slug}
-                  className="flex items-center gap-3 bg-[#FFFBEB] border border-[#FEF3C7] rounded-[6px] px-3 py-2.5 text-left"
-                >
-                  <span className="text-[22px] shrink-0">{a.icon}</span>
-                  <p className="text-[14px] font-medium text-[#92400E]">{a.title}</p>
-                </div>
-              ))}
+              {newAchievements.map((a) => {
+                const Icon = getAchievementIcon(a.icon);
+                return (
+                  <div
+                    key={a.slug}
+                    className="flex items-center gap-3 bg-[#FFFBEB] border border-[#FEF3C7] rounded-[6px] px-3 py-2.5 text-left"
+                  >
+                    <div className="w-8 h-8 rounded-full bg-[#FEF3C7] flex items-center justify-center shrink-0">
+                      <Icon className="w-4 h-4 text-[#92400E]" strokeWidth={2} />
+                    </div>
+                    <p className="text-[14px] font-medium text-[#92400E]">{a.title}</p>
+                  </div>
+                );
+              })}
             </div>
           </div>
         )}
