@@ -4,11 +4,12 @@ import { createClient } from "@/lib/supabase/server";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { LevelProgressCard } from "@/components/dashboard/LevelProgressCard";
+import { StreakCard } from "@/components/dashboard/StreakCard";
+import { ReviewCard } from "@/components/dashboard/ReviewCard";
 import type { Tables } from "@/types/database";
 
-export const metadata: Metadata = {
-  title: "Dashboard",
-};
+export const metadata: Metadata = { title: "Inicio — Parlo" };
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -16,23 +17,34 @@ export default async function DashboardPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const [profileResult, statsResult, coursesResult] = await Promise.all([
-    supabase
-      .from("profiles")
-      .select("display_name")
-      .eq("id", user!.id)
-      .single(),
-    supabase
-      .from("user_stats")
-      .select("*")
-      .eq("user_id", user!.id)
-      .single(),
-    supabase
-      .from("courses")
-      .select("id, slug, title, description, source_language, target_language")
-      .eq("is_published", true)
-      .limit(3),
-  ]);
+  const [profileResult, statsResult, reviewResult, progressResult, coursesResult] =
+    await Promise.all([
+      supabase
+        .from("profiles")
+        .select("display_name")
+        .eq("id", user!.id)
+        .single(),
+      supabase
+        .from("user_stats")
+        .select("*")
+        .eq("user_id", user!.id)
+        .single(),
+      supabase
+        .from("user_exercise_history")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user!.id)
+        .lte("next_review_at", new Date().toISOString()),
+      supabase
+        .from("user_progress")
+        .select("id", { count: "exact", head: true })
+        .eq("user_id", user!.id)
+        .eq("status", "completed"),
+      supabase
+        .from("courses")
+        .select("id, slug, title, description, source_language, target_language")
+        .eq("is_published", true)
+        .limit(3),
+    ]);
 
   const profile = profileResult.data as Pick<Tables<"profiles">, "display_name"> | null;
   const stats = statsResult.data as Tables<"user_stats"> | null;
@@ -41,45 +53,70 @@ export default async function DashboardPage() {
     "id" | "slug" | "title" | "description" | "source_language" | "target_language"
   >[] | null;
 
+  const reviewCount = reviewResult.count ?? 0;
+  const lessonsCompleted = progressResult.count ?? 0;
+
   const firstName = profile?.display_name?.split(" ")[0] ?? "Estudiante";
   const totalXp = stats?.total_xp ?? 0;
-  const streak = stats?.current_streak ?? 0;
-  const lessonsCompleted = stats?.total_lessons_completed ?? 0;
-  const wordsLearned = stats?.total_words_learned ?? 0;
+  const currentStreak = stats?.current_streak ?? 0;
+  const longestStreak = stats?.longest_streak ?? 0;
+
+  const mainCourse = courses?.[0];
+  const mainCourseTitle = mainCourse
+    ? ((mainCourse.title as Record<string, string> | null)?.["es"] ??
+       (mainCourse.title as Record<string, string> | null)?.["en"] ?? "")
+    : null;
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6">
       {/* Greeting */}
       <div>
         <h1 className="text-[28px] font-semibold text-[#111111] tracking-tight">
           Hola, {firstName}
         </h1>
         <p className="text-[15px] text-[#555555] mt-1">
-          {streak > 0
-            ? `Llevas ${streak} día${streak === 1 ? "" : "s"} de racha. ¡Sigue así!`
-            : "Completa tu primera lección para iniciar tu racha."}
+          {currentStreak > 0
+            ? `${currentStreak} día${currentStreak === 1 ? "" : "s"} de racha — ¡sigue así!`
+            : reviewCount > 0
+            ? `Tienes ${reviewCount} ejercicio${reviewCount === 1 ? "" : "s"} listos para repasar.`
+            : "Completa una lección para empezar tu racha."}
         </p>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <StatCard label="XP total" value={totalXp.toLocaleString()} bg="#EFF6FF" color="#1D4ED8" />
-        <StatCard
-          label="Racha actual"
-          value={`${streak} día${streak === 1 ? "" : "s"}`}
-          bg={streak > 0 ? "#FFF7ED" : undefined}
-          color={streak > 0 ? "#C2410C" : undefined}
-        />
-        <StatCard label="Lecciones" value={lessonsCompleted.toString()} bg="#ECFDF5" color="#059669" />
-        <StatCard label="Palabras" value={wordsLearned.toString()} />
+      {/* Level progress */}
+      <LevelProgressCard totalXp={totalXp} />
+
+      {/* Streak + Reviews */}
+      <div className="grid grid-cols-2 gap-4">
+        <StreakCard currentStreak={currentStreak} longestStreak={longestStreak} />
+        <ReviewCard reviewCount={reviewCount} />
       </div>
+
+      {/* Continue learning */}
+      {mainCourse && (
+        <div className="bg-white border border-[#E5E5E5] rounded-[6px] p-5 flex items-center justify-between gap-4">
+          <div className="min-w-0">
+            <p className="text-[12px] text-[#999999] uppercase tracking-wide mb-1">
+              Seguir aprendiendo
+            </p>
+            <p className="text-[16px] font-semibold text-[#111111] truncate">
+              {mainCourseTitle}
+            </p>
+            <p className="text-[13px] text-[#777777] mt-0.5">
+              {lessonsCompleted} lección{lessonsCompleted !== 1 ? "es" : ""} completada
+              {lessonsCompleted !== 1 ? "s" : ""}
+            </p>
+          </div>
+          <Link href={`/courses/${mainCourse.slug}`} className="shrink-0">
+            <Button size="sm">Continuar →</Button>
+          </Link>
+        </div>
+      )}
 
       {/* Courses */}
       <div>
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-[17px] font-semibold text-[#111111]">
-            Cursos disponibles
-          </h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-[16px] font-semibold text-[#111111]">Cursos</h2>
           <Link
             href="/courses"
             className="text-[14px] text-[#1D4ED8] hover:underline"
@@ -128,7 +165,7 @@ export default async function DashboardPage() {
         ) : (
           <Card>
             <CardContent className="text-center py-10">
-              <p className="text-[15px] text-[#555555] mb-4">
+              <p className="text-[15px] text-[#555555] mb-1">
                 Todavía no hay cursos disponibles.
               </p>
               <p className="text-[13px] text-[#999999]">
@@ -139,31 +176,5 @@ export default async function DashboardPage() {
         )}
       </div>
     </div>
-  );
-}
-
-function StatCard({
-  label,
-  value,
-  bg,
-  color,
-}: {
-  label: string;
-  value: string;
-  bg?: string;
-  color?: string;
-}) {
-  return (
-    <Card style={bg ? { backgroundColor: bg, borderColor: "transparent" } : undefined}>
-      <CardContent className="py-4">
-        <p className="text-[13px] text-[#777777] mb-1">{label}</p>
-        <p
-          className="text-[24px] font-semibold tabular-nums"
-          style={{ color: color ?? "#111111" }}
-        >
-          {value}
-        </p>
-      </CardContent>
-    </Card>
   );
 }
