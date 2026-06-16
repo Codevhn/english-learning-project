@@ -49,7 +49,7 @@ export function LessonLearnScreen({ lessonTitle, theoryContent, onComplete, onEx
 
       {/* Scrollable content */}
       <div className="flex-1 px-6 py-10">
-        <div className="max-w-2xl mx-auto flex flex-col gap-8 font-serif">
+        <div className="max-w-2xl mx-auto flex flex-col gap-8 font-reading">
           {/* Intro */}
           <p className="text-[18px] text-[#222222] leading-relaxed">
             {theoryContent.intro}
