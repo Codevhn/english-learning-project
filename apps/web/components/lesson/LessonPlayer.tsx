@@ -8,6 +8,7 @@ import { Flashcard } from "@/components/exercises/Flashcard";
 import { FillBlank } from "@/components/exercises/FillBlank";
 import { Translation } from "@/components/exercises/Translation";
 import { LessonComplete } from "@/components/lesson/LessonComplete";
+import { LessonLearnScreen, type TheoryContent } from "@/components/lesson/LessonLearnScreen";
 import { Button } from "@/components/ui/Button";
 
 type Exercise = Tables<"exercises">;
@@ -19,6 +20,7 @@ interface NewAchievement {
 }
 
 type Phase =
+  | { name: "learning" }
   | { name: "exercising" }
   | {
       name: "feedback";
@@ -35,6 +37,7 @@ interface LessonPlayerProps {
   xpReward: number;
   exercises: Exercise[];
   courseSlug: string;
+  theoryContent?: TheoryContent | null;
 }
 
 export function LessonPlayer({
@@ -43,10 +46,13 @@ export function LessonPlayer({
   xpReward,
   exercises,
   courseSlug,
+  theoryContent,
 }: LessonPlayerProps) {
   const router = useRouter();
   const [currentIndex, setCurrentIndex] = useState(0);
-  const [phase, setPhase] = useState<Phase>({ name: "exercising" });
+  const [phase, setPhase] = useState<Phase>(
+    theoryContent ? { name: "learning" } : { name: "exercising" }
+  );
   const [correctCount, setCorrectCount] = useState(0);
   const [isCompleting, setIsCompleting] = useState(false);
 
@@ -114,6 +120,16 @@ export function LessonPlayer({
       setPhase({ name: "exercising" });
     }
   }, [currentIndex, exercises.length, correctCount, lessonId, xpReward]);
+
+  if (phase.name === "learning" && theoryContent) {
+    return (
+      <LessonLearnScreen
+        lessonTitle={lessonTitle}
+        theoryContent={theoryContent}
+        onComplete={() => setPhase({ name: "exercising" })}
+      />
+    );
+  }
 
   if (phase.name === "completed") {
     return (

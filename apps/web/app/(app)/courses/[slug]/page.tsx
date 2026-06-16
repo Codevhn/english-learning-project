@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { CEFR_COLORS } from "@/lib/levels";
-import type { Tables } from "@/types/database";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -41,32 +40,67 @@ export default async function CourseDetailPage({ params }: Props) {
 
   if (!course) notFound();
 
+  // Fetch units with their modules
   const { data: units } = await supabase
     .from("units")
-    .select(
-      "id, order_index, title, cefr_level, lessons(id, order_index, title, lesson_type, xp_reward, estimated_minutes, is_published)"
-    )
+    .select("id, order_index, title, cefr_level")
     .eq("course_id", course.id)
     .eq("is_published", true)
     .order("order_index");
 
-  const lessonIds =
-    units?.flatMap((u) =>
-      (u.lessons as Tables<"lessons">[]).map((l) => l.id)
-    ) ?? [];
+  const unitIds = (units ?? []).map((u) => u.id);
+
+  // Fetch all published modules for these units
+  const { data: modules } =
+    unitIds.length > 0
+      ? await supabase
+          .from("modules")
+          .select("id, unit_id, order_index, title, description")
+          .in("unit_id", unitIds)
+          .eq("is_published", true)
+          .order("order_index")
+      : { data: [] };
+
+  const moduleIds = (modules ?? []).map((m) => m.id);
+
+  // Fetch all published lessons for these modules (just for counts + progress)
+  const { data: lessons } =
+    moduleIds.length > 0
+      ? await supabase
+          .from("lessons")
+          .select("id, module_id, is_published")
+          .in("module_id", moduleIds)
+          .eq("is_published", true)
+      : { data: [] };
+
+  const lessonIds = (lessons ?? []).map((l) => l.id);
 
   const { data: progressData } =
     user && lessonIds.length > 0
       ? await supabase
           .from("user_progress")
-          .select("lesson_id, status, score")
+          .select("lesson_id, status")
           .eq("user_id", user.id)
           .in("lesson_id", lessonIds)
       : { data: [] };
 
   const progressMap = new Map(
-    (progressData ?? []).map((p) => [p.lesson_id, p])
+    (progressData ?? []).map((p) => [p.lesson_id, p.status])
   );
+
+  // Group lessons by module_id
+  const lessonsByModule = new Map<string, { id: string; is_published: boolean }[]>();
+  for (const l of lessons ?? []) {
+    if (!lessonsByModule.has(l.module_id!)) lessonsByModule.set(l.module_id!, []);
+    lessonsByModule.get(l.module_id!)!.push(l);
+  }
+
+  // Group modules by unit_id
+  const modulesByUnit = new Map<string, typeof modules>();
+  for (const m of modules ?? []) {
+    if (!modulesByUnit.has(m.unit_id)) modulesByUnit.set(m.unit_id, []);
+    modulesByUnit.get(m.unit_id)!.push(m);
+  }
 
   const titleObj = course.title as Record<string, string> | null;
   const descObj = course.description as Record<string, string> | null;
@@ -99,21 +133,21 @@ export default async function CourseDetailPage({ params }: Props) {
         </div>
       </div>
 
-      <div className="flex flex-col gap-6">
+      <div className="flex flex-col gap-8">
         {(units ?? []).map((unit) => {
           const unitTitleObj = unit.title as Record<string, string> | null;
           const unitTitle = unitTitleObj?.["es"] ?? unitTitleObj?.["en"] ?? "";
-          const lessons = (unit.lessons as Tables<"lessons">[])
-            .filter((l) => l.is_published)
-            .sort((a, b) => a.order_index - b.order_index);
+          const unitModules = modulesByUnit.get(unit.id) ?? [];
 
           return (
             <div key={unit.id}>
-              <div className="flex items-center gap-3 mb-3">
+              <div className="flex items-center gap-3 mb-4">
                 <Badge
                   style={{
-                    backgroundColor: CEFR_COLORS[unit.cefr_level ?? ""]?.bg ?? "#F3F4F6",
-                    color: CEFR_COLORS[unit.cefr_level ?? ""]?.text ?? "#6B7280",
+                    backgroundColor:
+                      CEFR_COLORS[unit.cefr_level ?? ""]?.bg ?? "#F3F4F6",
+                    color:
+                      CEFR_COLORS[unit.cefr_level ?? ""]?.text ?? "#6B7280",
                     borderColor: "transparent",
                   }}
                 >
@@ -124,45 +158,67 @@ export default async function CourseDetailPage({ params }: Props) {
                 </h2>
               </div>
 
-              <div className="flex flex-col gap-2">
-                {lessons.map((lesson) => {
-                  const lessonTitleObj = lesson.title as Record<
-                    string,
-                    string
-                  > | null;
-                  const lessonTitle =
-                    lessonTitleObj?.["es"] ?? lessonTitleObj?.["en"] ?? "";
-                  const progress = progressMap.get(lesson.id);
-                  const isCompleted = progress?.status === "completed";
+              {unitModules.length === 0 && (
+                <p className="text-[14px] text-[#AAAAAA] pl-2">
+                  No hay módulos publicados en esta unidad.
+                </p>
+              )}
+
+              <div className="flex flex-col gap-3">
+                {unitModules.map((mod) => {
+                  const modTitleObj = mod.title as Record<string, string> | null;
+                  const modTitle = modTitleObj?.["es"] ?? modTitleObj?.["en"] ?? "";
+                  const modLessons = lessonsByModule.get(mod.id) ?? [];
+                  const completedCount = modLessons.filter(
+                    (l) => progressMap.get(l.id) === "completed"
+                  ).length;
+                  const totalLessons = modLessons.length;
+                  const isModuleComplete =
+                    totalLessons > 0 && completedCount === totalLessons;
+                  const progressPct =
+                    totalLessons > 0
+                      ? Math.round((completedCount / totalLessons) * 100)
+                      : 0;
 
                   return (
-                    <Card key={lesson.id}>
+                    <Card key={mod.id}>
                       <CardContent className="py-4 flex items-center justify-between gap-4">
-                        <div className="flex items-center gap-3 min-w-0">
+                        <div className="flex items-center gap-4 min-w-0 flex-1">
                           <div
-                            className={`w-2 h-2 rounded-full shrink-0 ${
-                              isCompleted ? "bg-[#16A34A]" : "bg-[#E5E5E5]"
+                            className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-[13px] font-semibold ${
+                              isModuleComplete
+                                ? "bg-[#ECFDF5] text-[#16A34A]"
+                                : "bg-[#EFF6FF] text-[#1D4ED8]"
                             }`}
-                          />
-                          <div className="min-w-0">
+                          >
+                            {isModuleComplete ? "✓" : mod.order_index}
+                          </div>
+                          <div className="min-w-0 flex-1">
                             <p className="text-[15px] font-medium text-[#111111] truncate">
-                              {lessonTitle}
+                              {modTitle}
                             </p>
-                            <p className="text-[12px] text-[#999999]">
-                              {lesson.estimated_minutes} min · {lesson.xp_reward}{" "}
-                              XP
-                            </p>
+                            <div className="flex items-center gap-2 mt-1">
+                              <div className="w-24 h-[2px] bg-[#E9ECEF] rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-[#1D4ED8] transition-all"
+                                  style={{ width: `${progressPct}%` }}
+                                />
+                              </div>
+                              <span className="text-[12px] text-[#AAAAAA]">
+                                {completedCount}/{totalLessons} lecciones
+                              </span>
+                            </div>
                           </div>
                         </div>
                         <Link
-                          href={`/courses/${slug}/units/${unit.order_index}/lessons/${lesson.order_index}`}
+                          href={`/courses/${slug}/units/${unit.order_index}/modules/${mod.order_index}`}
                           className="shrink-0"
                         >
                           <Button
-                            variant={isCompleted ? "secondary" : "primary"}
+                            variant={isModuleComplete ? "secondary" : "primary"}
                             size="sm"
                           >
-                            {isCompleted ? "Repasar" : "Comenzar"}
+                            {isModuleComplete ? "Repasar" : completedCount > 0 ? "Continuar" : "Comenzar"}
                           </Button>
                         </Link>
                       </CardContent>
