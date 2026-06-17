@@ -9,6 +9,8 @@ import { FillBlank } from "@/components/exercises/FillBlank";
 import { Translation } from "@/components/exercises/Translation";
 import { WordMatch } from "@/components/exercises/WordMatch";
 import { ReorderWords } from "@/components/exercises/ReorderWords";
+import { Listening } from "@/components/exercises/Listening";
+import { Speaking } from "@/components/exercises/Speaking";
 import { LessonComplete } from "@/components/lesson/LessonComplete";
 import { LessonLearnScreen, type TheoryContent } from "@/components/lesson/LessonLearnScreen";
 import { Button } from "@/components/ui/Button";
@@ -190,6 +192,7 @@ export function LessonPlayer({
   const prompt = currentExercise.prompt as {
     text: string;
     subtext?: string;
+    audio_text?: string;
   };
   const correctAnswer = currentExercise.correct_answer as {
     text?: string;
@@ -290,6 +293,30 @@ export function LessonPlayer({
             />
           )}
 
+          {currentExercise.exercise_type === "listening" && (
+            <Listening
+              key={currentIndex}
+              instruction={prompt.text}
+              audioText={prompt.audio_text ?? ""}
+              correctAnswer={correctAnswer.text ?? ""}
+              distractors={distractors}
+              accepted={correctAnswer.accepted}
+              onAnswer={handleAnswer}
+              disabled={isDisabled}
+            />
+          )}
+
+          {currentExercise.exercise_type === "speaking" && (
+            <Speaking
+              key={currentIndex}
+              instruction={prompt.text}
+              targetText={correctAnswer.text ?? ""}
+              accepted={correctAnswer.accepted}
+              onAnswer={handleAnswer}
+              disabled={isDisabled}
+            />
+          )}
+
           {![
             "multiple_choice",
             "flashcard",
@@ -297,6 +324,8 @@ export function LessonPlayer({
             "translation",
             "word_match",
             "reorder_words",
+            "listening",
+            "speaking",
           ].includes(currentExercise.exercise_type) && (
             <div className="text-center">
               <p className="text-[15px] text-[#555555] mb-6">
