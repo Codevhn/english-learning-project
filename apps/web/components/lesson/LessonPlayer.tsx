@@ -7,6 +7,8 @@ import { MultipleChoice } from "@/components/exercises/MultipleChoice";
 import { Flashcard } from "@/components/exercises/Flashcard";
 import { FillBlank } from "@/components/exercises/FillBlank";
 import { Translation } from "@/components/exercises/Translation";
+import { WordMatch } from "@/components/exercises/WordMatch";
+import { ReorderWords } from "@/components/exercises/ReorderWords";
 import { LessonComplete } from "@/components/lesson/LessonComplete";
 import { LessonLearnScreen, type TheoryContent } from "@/components/lesson/LessonLearnScreen";
 import { Button } from "@/components/ui/Button";
@@ -28,6 +30,7 @@ type Phase =
       correctAnswer: string;
       explanation?: string;
       isFlashcard: boolean;
+      isMatch: boolean;
     }
   | { name: "completed"; score: number; xpEarned: number; newAchievements: NewAchievement[] };
 
@@ -68,15 +71,16 @@ export function LessonPlayer({
         string
       > | null;
       const correctAnswerObj = currentExercise.correct_answer as {
-        text: string;
+        text?: string;
       };
 
       setPhase({
         name: "feedback",
         isCorrect,
-        correctAnswer: correctAnswerObj.text,
+        correctAnswer: correctAnswerObj.text ?? "",
         explanation: explanationObj?.es,
         isFlashcard: currentExercise.exercise_type === "flashcard",
+        isMatch: currentExercise.exercise_type === "word_match",
       });
 
       fetch("/api/progress/submit-answer", {
@@ -148,10 +152,11 @@ export function LessonPlayer({
     subtext?: string;
   };
   const correctAnswer = currentExercise.correct_answer as {
-    text: string;
+    text?: string;
     accepted?: string[];
     phonetic?: string;
     note?: string;
+    pairs?: { en: string; es: string }[];
   };
   const distractors = currentExercise.distractors as string[] | null;
   const isDisabled = phase.name === "feedback";
@@ -186,7 +191,7 @@ export function LessonPlayer({
             <MultipleChoice
               key={currentIndex}
               prompt={prompt.text}
-              correctAnswer={correctAnswer.text}
+              correctAnswer={correctAnswer.text ?? ""}
               distractors={distractors ?? []}
               onAnswer={handleAnswer}
               disabled={isDisabled}
@@ -198,7 +203,7 @@ export function LessonPlayer({
               key={currentIndex}
               word={prompt.text}
               subtext={prompt.subtext}
-              translation={correctAnswer.text}
+              translation={correctAnswer.text ?? ""}
               phonetic={correctAnswer.phonetic}
               note={correctAnswer.note}
               onAnswer={handleAnswer}
@@ -209,7 +214,7 @@ export function LessonPlayer({
             <FillBlank
               key={currentIndex}
               sentence={prompt.text}
-              accepted={correctAnswer.accepted ?? [correctAnswer.text]}
+              accepted={correctAnswer.accepted ?? [correctAnswer.text ?? ""]}
               onAnswer={handleAnswer}
               disabled={isDisabled}
             />
@@ -219,15 +224,40 @@ export function LessonPlayer({
             <Translation
               key={currentIndex}
               prompt={prompt.text}
-              accepted={correctAnswer.accepted ?? [correctAnswer.text]}
+              accepted={correctAnswer.accepted ?? [correctAnswer.text ?? ""]}
               onAnswer={handleAnswer}
               disabled={isDisabled}
             />
           )}
 
-          {!["multiple_choice", "flashcard", "fill_blank", "translation"].includes(
-            currentExercise.exercise_type
-          ) && (
+          {currentExercise.exercise_type === "word_match" && (
+            <WordMatch
+              key={currentIndex}
+              prompt={prompt.text}
+              pairs={correctAnswer.pairs ?? []}
+              onAnswer={handleAnswer}
+              disabled={isDisabled}
+            />
+          )}
+
+          {currentExercise.exercise_type === "reorder_words" && (
+            <ReorderWords
+              key={currentIndex}
+              prompt={prompt.text}
+              correctAnswer={correctAnswer.text ?? ""}
+              onAnswer={handleAnswer}
+              disabled={isDisabled}
+            />
+          )}
+
+          {![
+            "multiple_choice",
+            "flashcard",
+            "fill_blank",
+            "translation",
+            "word_match",
+            "reorder_words",
+          ].includes(currentExercise.exercise_type) && (
             <div className="text-center">
               <p className="text-[15px] text-[#555555] mb-6">
                 Este tipo de ejercicio aún no está disponible.
@@ -259,7 +289,7 @@ export function LessonPlayer({
                 ? "Sigue practicando."
                 : "Incorrecto"}
             </p>
-            {!phase.isCorrect && !phase.isFlashcard && (
+            {!phase.isCorrect && !phase.isFlashcard && !phase.isMatch && (
               <p className="text-[14px] text-[#555555] mb-1">
                 Respuesta:{" "}
                 <span className="font-medium text-[#111111]">

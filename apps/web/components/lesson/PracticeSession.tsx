@@ -7,6 +7,8 @@ import { MultipleChoice } from "@/components/exercises/MultipleChoice";
 import { Flashcard } from "@/components/exercises/Flashcard";
 import { FillBlank } from "@/components/exercises/FillBlank";
 import { Translation } from "@/components/exercises/Translation";
+import { WordMatch } from "@/components/exercises/WordMatch";
+import { ReorderWords } from "@/components/exercises/ReorderWords";
 import { Button } from "@/components/ui/Button";
 
 export type PracticeItem = {
@@ -22,6 +24,7 @@ type Phase =
       correctAnswer: string;
       explanation?: string;
       isFlashcard: boolean;
+      isMatch: boolean;
     }
   | { name: "completed"; correctCount: number; total: number };
 
@@ -47,14 +50,15 @@ export function PracticeSession({ items }: PracticeSessionProps) {
         string,
         string
       > | null;
-      const correctAnswerObj = exercise.correct_answer as { text: string };
+      const correctAnswerObj = exercise.correct_answer as { text?: string };
 
       setPhase({
         name: "feedback",
         isCorrect,
-        correctAnswer: correctAnswerObj.text,
+        correctAnswer: correctAnswerObj.text ?? "",
         explanation: explanationObj?.es,
         isFlashcard: exercise.exercise_type === "flashcard",
+        isMatch: exercise.exercise_type === "word_match",
       });
 
       fetch("/api/progress/update-srs", {
@@ -145,10 +149,11 @@ export function PracticeSession({ items }: PracticeSessionProps) {
 
   const prompt = exercise.prompt as { text: string; subtext?: string };
   const correctAnswer = exercise.correct_answer as {
-    text: string;
+    text?: string;
     accepted?: string[];
     phonetic?: string;
     note?: string;
+    pairs?: { en: string; es: string }[];
   };
   const distractors = exercise.distractors as string[] | null;
   const isDisabled = phase.name === "feedback";
@@ -180,7 +185,7 @@ export function PracticeSession({ items }: PracticeSessionProps) {
             <MultipleChoice
               key={currentIndex}
               prompt={prompt.text}
-              correctAnswer={correctAnswer.text}
+              correctAnswer={correctAnswer.text ?? ""}
               distractors={distractors ?? []}
               onAnswer={handleAnswer}
               disabled={isDisabled}
@@ -191,7 +196,7 @@ export function PracticeSession({ items }: PracticeSessionProps) {
               key={currentIndex}
               word={prompt.text}
               subtext={prompt.subtext}
-              translation={correctAnswer.text}
+              translation={correctAnswer.text ?? ""}
               phonetic={correctAnswer.phonetic}
               note={correctAnswer.note}
               onAnswer={handleAnswer}
@@ -201,7 +206,7 @@ export function PracticeSession({ items }: PracticeSessionProps) {
             <FillBlank
               key={currentIndex}
               sentence={prompt.text}
-              accepted={correctAnswer.accepted ?? [correctAnswer.text]}
+              accepted={correctAnswer.accepted ?? [correctAnswer.text ?? ""]}
               onAnswer={handleAnswer}
               disabled={isDisabled}
             />
@@ -210,7 +215,25 @@ export function PracticeSession({ items }: PracticeSessionProps) {
             <Translation
               key={currentIndex}
               prompt={prompt.text}
-              accepted={correctAnswer.accepted ?? [correctAnswer.text]}
+              accepted={correctAnswer.accepted ?? [correctAnswer.text ?? ""]}
+              onAnswer={handleAnswer}
+              disabled={isDisabled}
+            />
+          )}
+          {exercise.exercise_type === "word_match" && (
+            <WordMatch
+              key={currentIndex}
+              prompt={prompt.text}
+              pairs={correctAnswer.pairs ?? []}
+              onAnswer={handleAnswer}
+              disabled={isDisabled}
+            />
+          )}
+          {exercise.exercise_type === "reorder_words" && (
+            <ReorderWords
+              key={currentIndex}
+              prompt={prompt.text}
+              correctAnswer={correctAnswer.text ?? ""}
               onAnswer={handleAnswer}
               disabled={isDisabled}
             />
@@ -238,7 +261,7 @@ export function PracticeSession({ items }: PracticeSessionProps) {
                 ? "Sigue practicando."
                 : "Incorrecto"}
             </p>
-            {!phase.isCorrect && !phase.isFlashcard && (
+            {!phase.isCorrect && !phase.isFlashcard && !phase.isMatch && (
               <p className="text-[14px] text-[#555555] mb-1">
                 Respuesta:{" "}
                 <span className="font-medium text-[#111111]">
