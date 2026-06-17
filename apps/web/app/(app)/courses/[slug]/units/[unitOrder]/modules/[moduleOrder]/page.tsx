@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { Check } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
+import { isMastered } from "@/lib/mastery";
 
 interface Props {
   params: Promise<{
@@ -76,9 +77,10 @@ export default async function ModulePage({ params }: Props) {
   const modTitle = modTitleObj?.["es"] ?? modTitleObj?.["en"] ?? "";
   const modDesc = modDescObj?.["es"] ?? modDescObj?.["en"] ?? "";
 
-  const completedCount = (lessons ?? []).filter(
-    (l) => progressMap.get(l.id)?.status === "completed"
-  ).length;
+  const masteredCount = (lessons ?? []).filter((l) => {
+    const p = progressMap.get(l.id);
+    return p?.status === "completed" && isMastered(p.score);
+  }).length;
   const total = (lessons ?? []).length;
 
   return (
@@ -102,11 +104,11 @@ export default async function ModulePage({ params }: Props) {
             <div className="flex-1 max-w-xs h-[3px] bg-[#E9ECEF] rounded-full overflow-hidden">
               <div
                 className="h-full bg-[#1D4ED8] transition-all"
-                style={{ width: `${Math.round((completedCount / total) * 100)}%` }}
+                style={{ width: `${Math.round((masteredCount / total) * 100)}%` }}
               />
             </div>
             <span className="text-[13px] text-[#AAAAAA]">
-              {completedCount} / {total} lecciones
+              {masteredCount} / {total} lecciones
             </span>
           </div>
         )}
@@ -119,10 +121,13 @@ export default async function ModulePage({ params }: Props) {
           const lessonTitle = lessonTitleObj?.["es"] ?? lessonTitleObj?.["en"] ?? "";
           const progress = progressMap.get(lesson.id);
           const isCompleted = progress?.status === "completed";
-          const prevCompleted =
+          const mastered = isCompleted && isMastered(progress?.score);
+          const prevProgress =
+            idx > 0 ? progressMap.get((lessons ?? [])[idx - 1]?.id) : undefined;
+          const prevMastered =
             idx === 0 ||
-            progressMap.get((lessons ?? [])[idx - 1]?.id)?.status === "completed";
-          const isLocked = !isCompleted && !prevCompleted && idx > 0;
+            (prevProgress?.status === "completed" && isMastered(prevProgress.score));
+          const isLocked = !isCompleted && !prevMastered && idx > 0;
 
           return (
             <Card key={lesson.id} className={isLocked ? "opacity-50" : ""}>
@@ -130,12 +135,12 @@ export default async function ModulePage({ params }: Props) {
                 <div className="flex items-center gap-3 min-w-0">
                   <div
                     className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-[12px] font-semibold ${
-                      isCompleted
+                      mastered
                         ? "bg-[#ECFDF5] text-[#16A34A]"
                         : "bg-[#F3F4F6] text-[#9CA3AF]"
                     }`}
                   >
-                    {isCompleted ? (
+                    {mastered ? (
                       <Check className="w-3.5 h-3.5" strokeWidth={2.5} />
                     ) : (
                       idx + 1
@@ -155,8 +160,8 @@ export default async function ModulePage({ params }: Props) {
                     href={`/courses/${slug}/units/${unitOrder}/modules/${moduleOrder}/lessons/${lesson.order_index}`}
                     className="shrink-0"
                   >
-                    <Button variant={isCompleted ? "secondary" : "primary"} size="sm">
-                      {isCompleted ? "Repasar" : "Comenzar"}
+                    <Button variant={mastered ? "secondary" : "primary"} size="sm">
+                      {mastered ? "Repasar" : isCompleted ? "Reforzar" : "Comenzar"}
                     </Button>
                   </Link>
                 )}

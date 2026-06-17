@@ -48,6 +48,7 @@ interface LessonPlayerProps {
   xpReward: number;
   exercises: Exercise[];
   courseSlug: string;
+  lessonHref: string;
   theoryContent?: TheoryContent | null;
 }
 
@@ -57,22 +58,38 @@ export function LessonPlayer({
   xpReward,
   exercises,
   courseSlug,
+  lessonHref,
   theoryContent,
 }: LessonPlayerProps) {
   const router = useRouter();
-  const [currentIndex, setCurrentIndex] = useState(0);
+  // Failed exercises are pushed to the back of the queue instead of being
+  // skipped, so the lesson only ends once every exercise has been answered
+  // correctly at least once.
+  const [queue, setQueue] = useState<number[]>(() =>
+    exercises.map((_, i) => i)
+  );
+  const [masteredCount, setMasteredCount] = useState(0);
+  const [attemptedOnce, setAttemptedOnce] = useState<Set<number>>(new Set());
+  const [firstAttemptCorrect, setFirstAttemptCorrect] = useState(0);
   const [phase, setPhase] = useState<Phase>(
     theoryContent ? { name: "learning" } : { name: "exercising" }
   );
-  const [correctCount, setCorrectCount] = useState(0);
   const [isCompleting, setIsCompleting] = useState(false);
 
-  const currentExercise = exercises[currentIndex];
-  const progressPct = (currentIndex / exercises.length) * 100;
+  const currentExercise = exercises[queue[0]];
+  const progressPct = (masteredCount / exercises.length) * 100;
 
   const handleAnswer = useCallback(
     (answer: string, isCorrect: boolean) => {
-      if (isCorrect) setCorrectCount((c) => c + 1);
+      const idx = queue[0];
+
+      // Score reflects first-attempt accuracy only — once a wrong exercise
+      // is requeued, getting it right on a later attempt no longer counts
+      // toward the score, otherwise every session would end at 100%.
+      if (!attemptedOnce.has(idx)) {
+        setAttemptedOnce((s) => new Set(s).add(idx));
+        if (isCorrect) setFirstAttemptCorrect((c) => c + 1);
+      }
 
       const explanationObj = currentExercise.explanation as Record<
         string,
@@ -100,7 +117,7 @@ export function LessonPlayer({
         }),
       }).catch(() => {});
     },
-    [currentExercise]
+    [queue, attemptedOnce, currentExercise]
   );
 
   const submitCompletion = useCallback(
@@ -120,11 +137,18 @@ export function LessonPlayer({
   );
 
   const handleNext = useCallback(async () => {
-    const isLast = currentIndex >= exercises.length - 1;
+    if (phase.name !== "feedback") return;
 
-    if (isLast) {
+    const idx = queue[0];
+    const rest = queue.slice(1);
+    const nextQueue = phase.isCorrect ? rest : [...rest, idx];
+    if (phase.isCorrect) setMasteredCount((c) => c + 1);
+
+    if (nextQueue.length === 0) {
       setIsCompleting(true);
-      const finalScore = Math.round((correctCount / exercises.length) * 100);
+      const finalScore = Math.round(
+        (firstAttemptCorrect / exercises.length) * 100
+      );
 
       try {
         const data = await submitCompletion(finalScore);
@@ -145,10 +169,10 @@ export function LessonPlayer({
       }
       setIsCompleting(false);
     } else {
-      setCurrentIndex((i) => i + 1);
+      setQueue(nextQueue);
       setPhase({ name: "exercising" });
     }
-  }, [currentIndex, exercises.length, correctCount, submitCompletion, xpReward]);
+  }, [phase, queue, firstAttemptCorrect, exercises.length, submitCompletion, xpReward]);
 
   const handleRetrySave = useCallback(async () => {
     if (phase.name !== "completed") return;
@@ -182,6 +206,7 @@ export function LessonPlayer({
         score={phase.score}
         xpEarned={phase.xpEarned}
         courseSlug={courseSlug}
+        lessonHref={lessonHref}
         newAchievements={phase.newAchievements}
         saveFailed={phase.saveFailed}
         onRetrySave={handleRetrySave}
@@ -223,7 +248,7 @@ export function LessonPlayer({
           ← Salir
         </button>
         <span className="text-[13px] text-[#AAAAAA]">
-          {currentIndex + 1} / {exercises.length}
+          {masteredCount} / {exercises.length}
         </span>
       </div>
 
@@ -232,7 +257,7 @@ export function LessonPlayer({
         <div className="w-full max-w-lg">
           {currentExercise.exercise_type === "multiple_choice" && (
             <MultipleChoice
-              key={currentIndex}
+              key={queue[0]}
               prompt={prompt.text}
               correctAnswer={correctAnswer.text ?? ""}
               distractors={distractors ?? []}
@@ -243,7 +268,7 @@ export function LessonPlayer({
 
           {currentExercise.exercise_type === "flashcard" && (
             <Flashcard
-              key={currentIndex}
+              key={queue[0]}
               word={prompt.text}
               subtext={prompt.subtext}
               translation={correctAnswer.text ?? ""}
@@ -255,7 +280,7 @@ export function LessonPlayer({
 
           {currentExercise.exercise_type === "fill_blank" && (
             <FillBlank
-              key={currentIndex}
+              key={queue[0]}
               sentence={prompt.text}
               accepted={correctAnswer.accepted ?? [correctAnswer.text ?? ""]}
               onAnswer={handleAnswer}
@@ -265,7 +290,7 @@ export function LessonPlayer({
 
           {currentExercise.exercise_type === "translation" && (
             <Translation
-              key={currentIndex}
+              key={queue[0]}
               prompt={prompt.text}
               accepted={correctAnswer.accepted ?? [correctAnswer.text ?? ""]}
               onAnswer={handleAnswer}
@@ -275,7 +300,7 @@ export function LessonPlayer({
 
           {currentExercise.exercise_type === "word_match" && (
             <WordMatch
-              key={currentIndex}
+              key={queue[0]}
               prompt={prompt.text}
               pairs={correctAnswer.pairs ?? []}
               onAnswer={handleAnswer}
@@ -285,7 +310,7 @@ export function LessonPlayer({
 
           {currentExercise.exercise_type === "reorder_words" && (
             <ReorderWords
-              key={currentIndex}
+              key={queue[0]}
               prompt={prompt.text}
               correctAnswer={correctAnswer.text ?? ""}
               onAnswer={handleAnswer}
@@ -295,7 +320,7 @@ export function LessonPlayer({
 
           {currentExercise.exercise_type === "listening" && (
             <Listening
-              key={currentIndex}
+              key={queue[0]}
               instruction={prompt.text}
               audioText={prompt.audio_text ?? ""}
               correctAnswer={correctAnswer.text ?? ""}
@@ -308,7 +333,7 @@ export function LessonPlayer({
 
           {currentExercise.exercise_type === "speaking" && (
             <Speaking
-              key={currentIndex}
+              key={queue[0]}
               instruction={prompt.text}
               targetText={correctAnswer.text ?? ""}
               accepted={correctAnswer.accepted}
@@ -331,7 +356,9 @@ export function LessonPlayer({
               <p className="text-[15px] text-[#555555] mb-6">
                 Este tipo de ejercicio aún no está disponible.
               </p>
-              <Button onClick={() => handleAnswer("", false)}>Continuar</Button>
+              {/* Mark as correct so an unrenderable exercise can't get stuck
+                  retrying forever in the requeue loop below. */}
+              <Button onClick={() => handleAnswer("", true)}>Continuar</Button>
             </div>
           )}
         </div>
@@ -369,6 +396,12 @@ export function LessonPlayer({
             {phase.explanation && (
               <p className="text-[13px] text-[#777777] mb-4">
                 {phase.explanation}
+              </p>
+            )}
+            {!phase.isCorrect && (
+              <p className="text-[12px] text-[#999999] mb-4">
+                Este ejercicio volverá a aparecer más adelante — tienes que
+                resolverlo bien para terminar la lección.
               </p>
             )}
             <Button

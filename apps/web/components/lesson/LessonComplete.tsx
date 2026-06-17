@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { getAchievementIcon } from "@/lib/achievementIcons";
+import { MASTERY_THRESHOLD, isMastered } from "@/lib/mastery";
 
 interface NewAchievement {
   slug: string;
@@ -16,6 +17,7 @@ interface LessonCompleteProps {
   score: number;
   xpEarned: number;
   courseSlug: string;
+  lessonHref: string;
   newAchievements?: NewAchievement[];
   saveFailed?: boolean;
   onRetrySave?: () => Promise<void>;
@@ -25,12 +27,14 @@ export function LessonComplete({
   score,
   xpEarned,
   courseSlug,
+  lessonHref,
   newAchievements = [],
   saveFailed = false,
   onRetrySave,
 }: LessonCompleteProps) {
   const router = useRouter();
   const [retrying, setRetrying] = useState(false);
+  const mastered = isMastered(score);
 
   async function handleRetry() {
     if (!onRetrySave || retrying) return;
@@ -58,12 +62,18 @@ export function LessonComplete({
         </div>
 
         <h1 className="text-[26px] font-semibold text-[#111111] mb-2">
-          {score === 100 ? "¡Lección perfecta!" : "¡Lección completada!"}
+          {score === 100
+            ? "¡Lección perfecta!"
+            : mastered
+            ? "¡Lección completada!"
+            : "Necesitas reforzar esta lección"}
         </h1>
         <p className="text-[15px] text-[#555555] mb-8">
-          {score >= 70
+          {score === 100
+            ? "Resolviste todos los ejercicios a la primera."
+            : mastered
             ? "Buen trabajo. Sigue practicando para reforzar lo aprendido."
-            : "Sigue practicando para mejorar tu precisión."}
+            : `Tu precisión a la primera fue del ${score}%. Necesitas al menos ${MASTERY_THRESHOLD}% para desbloquear la siguiente lección.`}
         </p>
 
         {saveFailed && (
@@ -123,8 +133,18 @@ export function LessonComplete({
         )}
 
         <div className="flex flex-col gap-3">
+          {!mastered && (
+            <Button
+              onClick={() => router.push(lessonHref)}
+              className="w-full"
+              size="lg"
+            >
+              Repetir lección
+            </Button>
+          )}
           <Button
             onClick={() => router.push(`/courses/${courseSlug}`)}
+            variant={mastered ? "primary" : "secondary"}
             className="w-full"
             size="lg"
           >

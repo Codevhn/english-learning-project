@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { CEFR_COLORS } from "@/lib/levels";
+import { isMastered } from "@/lib/mastery";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -80,13 +81,13 @@ export default async function CourseDetailPage({ params }: Props) {
     user && lessonIds.length > 0
       ? await supabase
           .from("user_progress")
-          .select("lesson_id, status")
+          .select("lesson_id, status, score")
           .eq("user_id", user.id)
           .in("lesson_id", lessonIds)
       : { data: [] };
 
   const progressMap = new Map(
-    (progressData ?? []).map((p) => [p.lesson_id, p.status])
+    (progressData ?? []).map((p) => [p.lesson_id, p])
   );
 
   // Group lessons by module_id
@@ -170,15 +171,16 @@ export default async function CourseDetailPage({ params }: Props) {
                   const modTitleObj = mod.title as Record<string, string> | null;
                   const modTitle = modTitleObj?.["es"] ?? modTitleObj?.["en"] ?? "";
                   const modLessons = lessonsByModule.get(mod.id) ?? [];
-                  const completedCount = modLessons.filter(
-                    (l) => progressMap.get(l.id) === "completed"
-                  ).length;
+                  const masteredCount = modLessons.filter((l) => {
+                    const p = progressMap.get(l.id);
+                    return p?.status === "completed" && isMastered(p.score);
+                  }).length;
                   const totalLessons = modLessons.length;
                   const isModuleComplete =
-                    totalLessons > 0 && completedCount === totalLessons;
+                    totalLessons > 0 && masteredCount === totalLessons;
                   const progressPct =
                     totalLessons > 0
-                      ? Math.round((completedCount / totalLessons) * 100)
+                      ? Math.round((masteredCount / totalLessons) * 100)
                       : 0;
 
                   return (
@@ -210,7 +212,7 @@ export default async function CourseDetailPage({ params }: Props) {
                                 />
                               </div>
                               <span className="text-[12px] text-[#AAAAAA]">
-                                {completedCount}/{totalLessons} lecciones
+                                {masteredCount}/{totalLessons} lecciones
                               </span>
                             </div>
                           </div>
@@ -223,7 +225,7 @@ export default async function CourseDetailPage({ params }: Props) {
                             variant={isModuleComplete ? "secondary" : "primary"}
                             size="sm"
                           >
-                            {isModuleComplete ? "Repasar" : completedCount > 0 ? "Continuar" : "Comenzar"}
+                            {isModuleComplete ? "Repasar" : masteredCount > 0 ? "Continuar" : "Comenzar"}
                           </Button>
                         </Link>
                       </CardContent>

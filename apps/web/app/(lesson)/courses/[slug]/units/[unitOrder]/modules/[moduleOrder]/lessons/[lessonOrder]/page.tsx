@@ -79,6 +79,7 @@ export default async function LessonPage({ params }: Props) {
       xpReward={lesson.xp_reward ?? 10}
       exercises={exercises as Tables<"exercises">[]}
       courseSlug={slug}
+      lessonHref={`/courses/${slug}/units/${unitOrder}/modules/${moduleOrder}/lessons/${lessonOrder}`}
       theoryContent={lesson.theory_content as TheoryContent | null}
     />
   );
