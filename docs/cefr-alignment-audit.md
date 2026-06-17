@@ -4,6 +4,8 @@
 **Fuente auditada:** `packages/database/supabase/seed/005_a1_reseed.sql` (12 módulos, 55 lecciones, 442 ejercicios — recuento exacto, corrige el "~440" del comentario de cabecera del propio archivo)
 **Método:** lectura completa del seed + comparación contra los inventarios de referencia CEFR A1 más usados en la industria (Cambridge English Grammar Profile, British Council/EAQUALS Core Inventory for General English, descriptores oficiales CEFR por destreza).
 
+**Estado — Fase A (gramática faltante): RESUELTA.** `packages/database/supabase/seed/006_grammar_gap_fix.sql` reordena los módulos (Verbo To Be y Pronombres Personales se mueven antes, ya que el resto del currículo depende de ellos) y agrega el módulo 3 "Preguntas y Estructuras Básicas" con 5 lecciones dedicadas: Palabras Interrogativas, Presente Simple Afirmativo, Presente Simple Negativo e Interrogativo (do/does), There Is/There Are, e Imperativos y Can (habilidad). Esto cierra los 5 huecos gramaticales de la sección 3 de este documento. Validado ejecutando el esquema real + ambos seeds contra una instancia de Postgres limpia (13 módulos, 60 lecciones, 482 ejercicios, re-ejecución idempotente confirmada). **Pendiente:** Fase B (listening) y Fase C (speaking) — siguen en cero, ver sección 1.
+
 ---
 
 ## Veredicto
