@@ -1,6 +1,8 @@
 "use client";
 
+import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { getAchievementIcon } from "@/lib/achievementIcons";
 
@@ -15,10 +17,27 @@ interface LessonCompleteProps {
   xpEarned: number;
   courseSlug: string;
   newAchievements?: NewAchievement[];
+  saveFailed?: boolean;
+  onRetrySave?: () => Promise<void>;
 }
 
-export function LessonComplete({ score, xpEarned, courseSlug, newAchievements = [] }: LessonCompleteProps) {
+export function LessonComplete({
+  score,
+  xpEarned,
+  courseSlug,
+  newAchievements = [],
+  saveFailed = false,
+  onRetrySave,
+}: LessonCompleteProps) {
   const router = useRouter();
+  const [retrying, setRetrying] = useState(false);
+
+  async function handleRetry() {
+    if (!onRetrySave || retrying) return;
+    setRetrying(true);
+    await onRetrySave();
+    setRetrying(false);
+  }
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center px-6 py-12">
@@ -46,6 +65,27 @@ export function LessonComplete({ score, xpEarned, courseSlug, newAchievements = 
             ? "Buen trabajo. Sigue practicando para reforzar lo aprendido."
             : "Sigue practicando para mejorar tu precisión."}
         </p>
+
+        {saveFailed && (
+          <div className="flex items-start gap-2.5 bg-[#FEF2F2] border border-[#FECACA] rounded-[6px] px-4 py-3 mb-6 text-left">
+            <TriangleAlert className="w-4 h-4 text-[#DC2626] shrink-0 mt-0.5" strokeWidth={2} />
+            <div className="flex-1">
+              <p className="text-[13px] font-medium text-[#DC2626] mb-1">
+                No se pudo guardar tu progreso
+              </p>
+              <p className="text-[12px] text-[#991B1B] mb-2">
+                Revisa tu conexión e inténtalo de nuevo antes de salir, o tu XP y el avance de esta lección no quedarán registrados.
+              </p>
+              <button
+                onClick={handleRetry}
+                disabled={retrying}
+                className="text-[12px] font-semibold text-[#DC2626] underline disabled:opacity-50"
+              >
+                {retrying ? "Reintentando…" : "Reintentar"}
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="grid grid-cols-2 gap-4 mb-6">
           <div className="bg-[#F8F9FA] rounded-[6px] p-4 text-center">

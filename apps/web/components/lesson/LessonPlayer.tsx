@@ -32,7 +32,13 @@ type Phase =
       isFlashcard: boolean;
       isMatch: boolean;
     }
-  | { name: "completed"; score: number; xpEarned: number; newAchievements: NewAchievement[] };
+  | {
+      name: "completed";
+      score: number;
+      xpEarned: number;
+      newAchievements: NewAchievement[];
+      saveFailed?: boolean;
+    };
 
 interface LessonPlayerProps {
   lessonId: string;
@@ -95,35 +101,67 @@ export function LessonPlayer({
     [currentExercise]
   );
 
+  const submitCompletion = useCallback(
+    async (finalScore: number) => {
+      const res = await fetch("/api/progress/complete-lesson", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lessonId, score: finalScore }),
+      });
+      if (!res.ok) throw new Error("complete-lesson request failed");
+      return res.json() as Promise<{
+        xpEarned?: number;
+        newAchievements?: NewAchievement[];
+      }>;
+    },
+    [lessonId]
+  );
+
   const handleNext = useCallback(async () => {
     const isLast = currentIndex >= exercises.length - 1;
 
     if (isLast) {
       setIsCompleting(true);
       const finalScore = Math.round((correctCount / exercises.length) * 100);
-      let xpEarned = xpReward;
 
-      let newAchievements: NewAchievement[] = [];
       try {
-        const res = await fetch("/api/progress/complete-lesson", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ lessonId, score: finalScore }),
+        const data = await submitCompletion(finalScore);
+        setPhase({
+          name: "completed",
+          score: finalScore,
+          xpEarned: data.xpEarned ?? xpReward,
+          newAchievements: data.newAchievements ?? [],
         });
-        if (res.ok) {
-          const data = await res.json();
-          xpEarned = data.xpEarned ?? xpReward;
-          newAchievements = data.newAchievements ?? [];
-        }
-      } catch {}
-
-      setPhase({ name: "completed", score: finalScore, xpEarned, newAchievements });
+      } catch {
+        setPhase({
+          name: "completed",
+          score: finalScore,
+          xpEarned: 0,
+          newAchievements: [],
+          saveFailed: true,
+        });
+      }
       setIsCompleting(false);
     } else {
       setCurrentIndex((i) => i + 1);
       setPhase({ name: "exercising" });
     }
-  }, [currentIndex, exercises.length, correctCount, lessonId, xpReward]);
+  }, [currentIndex, exercises.length, correctCount, submitCompletion, xpReward]);
+
+  const handleRetrySave = useCallback(async () => {
+    if (phase.name !== "completed") return;
+    try {
+      const data = await submitCompletion(phase.score);
+      setPhase({
+        name: "completed",
+        score: phase.score,
+        xpEarned: data.xpEarned ?? xpReward,
+        newAchievements: data.newAchievements ?? [],
+      });
+    } catch {
+      // still failing — leave saveFailed banner up for another retry
+    }
+  }, [phase, submitCompletion, xpReward]);
 
   if (phase.name === "learning" && theoryContent) {
     return (
@@ -143,6 +181,8 @@ export function LessonPlayer({
         xpEarned={phase.xpEarned}
         courseSlug={courseSlug}
         newAchievements={phase.newAchievements}
+        saveFailed={phase.saveFailed}
+        onRetrySave={handleRetrySave}
       />
     );
   }
