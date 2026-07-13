@@ -1,10 +1,8 @@
 import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
-import { Card, CardContent } from "@/components/ui/Card";
 import { DomainCard } from "@/components/domains/DomainCard";
 import { MASTERY_THRESHOLD } from "@/lib/mastery";
 import { DOMAIN_UNLOCK_MASTERED_LESSONS } from "@/lib/domains";
-import { Lock } from "lucide-react";
 
 export const metadata: Metadata = { title: "Rutas de Enfoque — Parlo" };
 
@@ -42,6 +40,35 @@ export default async function EnfoquesPage() {
     (selectionsResult.data ?? []).map((d) => d.domain_id)
   );
 
+  // Which domains actually have published lessons yet — the rest render
+  // as "Próximamente" even once the feature itself is unlocked.
+  const domainIds = domains.map((d) => d.id);
+  const { data: domainModules } =
+    domainIds.length > 0
+      ? await supabase
+          .from("modules")
+          .select("id, domain_id")
+          .in("domain_id", domainIds)
+          .eq("is_published", true)
+      : { data: [] };
+  const moduleIds = (domainModules ?? []).map((m) => m.id);
+  const { data: domainLessons } =
+    moduleIds.length > 0
+      ? await supabase
+          .from("lessons")
+          .select("module_id")
+          .in("module_id", moduleIds)
+          .eq("is_published", true)
+      : { data: [] };
+  const modulesWithLessons = new Set(
+    (domainLessons ?? []).map((l) => l.module_id)
+  );
+  const domainsWithContent = new Set(
+    (domainModules ?? [])
+      .filter((m) => modulesWithLessons.has(m.id))
+      .map((m) => m.domain_id)
+  );
+
   return (
     <div className="flex flex-col gap-8">
       <div>
@@ -53,53 +80,37 @@ export default async function EnfoquesPage() {
           curso principal. Elige uno o varios — no bloquean ni reemplazan tu
           progreso en el camino de niveles.
         </p>
+        {!unlocked && (
+          <p className="text-[13px] text-[#999999] mt-2">
+            Se desbloquean con {DOMAIN_UNLOCK_MASTERED_LESSONS} lecciones
+            dominadas en tu curso principal — llevas {masteredCount}/
+            {DOMAIN_UNLOCK_MASTERED_LESSONS}.
+          </p>
+        )}
       </div>
 
-      {!unlocked ? (
-        <Card>
-          <CardContent className="text-center py-12">
-            <div className="w-12 h-12 rounded-full bg-[#F3F4F6] flex items-center justify-center mx-auto mb-4">
-              <Lock className="w-5 h-5 text-[#9CA3AF]" strokeWidth={2} />
-            </div>
-            <p className="text-[16px] font-medium text-[#111111] mb-1">
-              Todavía no están disponibles
-            </p>
-            <p className="text-[14px] text-[#777777] max-w-sm mx-auto">
-              Necesitas dominar al menos {DOMAIN_UNLOCK_MASTERED_LESSONS}{" "}
-              lecciones de tu curso principal para desbloquear las Rutas de
-              Enfoque — así tienes la gramática base para usarlas. Llevas{" "}
-              {masteredCount}/{DOMAIN_UNLOCK_MASTERED_LESSONS}.
-            </p>
-          </CardContent>
-        </Card>
-      ) : domains.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {domains.map((domain) => {
-            const title = domain.title?.["es"] ?? domain.title?.["en"] ?? "";
-            const description =
-              domain.description?.["es"] ?? domain.description?.["en"] ?? "";
-            return (
-              <DomainCard
-                key={domain.id}
-                domainId={domain.id}
-                slug={domain.slug}
-                title={title}
-                description={description}
-                icon={domain.icon}
-                initiallySelected={selectedIds.has(domain.id)}
-              />
-            );
-          })}
-        </div>
-      ) : (
-        <Card>
-          <CardContent className="text-center py-10">
-            <p className="text-[15px] text-[#555555]">
-              Todavía no hay rutas de enfoque disponibles. Vuelve pronto.
-            </p>
-          </CardContent>
-        </Card>
-      )}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {domains.map((domain) => {
+          const title = domain.title?.["es"] ?? domain.title?.["en"] ?? "";
+          const description =
+            domain.description?.["es"] ?? domain.description?.["en"] ?? "";
+          return (
+            <DomainCard
+              key={domain.id}
+              domainId={domain.id}
+              slug={domain.slug}
+              title={title}
+              description={description}
+              icon={domain.icon}
+              initiallySelected={selectedIds.has(domain.id)}
+              globallyUnlocked={unlocked}
+              hasContent={domainsWithContent.has(domain.id)}
+              masteredCount={masteredCount}
+              requiredCount={DOMAIN_UNLOCK_MASTERED_LESSONS}
+            />
+          );
+        })}
+      </div>
     </div>
   );
 }
