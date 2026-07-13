@@ -46,7 +46,7 @@ export async function POST(request: Request) {
   const [existingResult, lessonResult, statsResult] = await Promise.all([
     supabase
       .from("user_progress")
-      .select("status")
+      .select("status, score")
       .eq("user_id", user.id)
       .eq("lesson_id", lessonId)
       .single(),
@@ -63,12 +63,18 @@ export async function POST(request: Request) {
   const xpEarned = isFirstCompletion ? (lessonResult.data?.xp_reward ?? 10) : 0;
   const stats = statsResult.data;
 
+  // On replay, keep the best score ever achieved so a bad replay session
+  // can't regress mastery and re-lock the next lesson.
+  const savedScore = isFirstCompletion
+    ? (score ?? 0)
+    : Math.max(existingResult.data?.score ?? 0, score ?? 0);
+
   await supabase.from("user_progress").upsert(
     {
       user_id: user.id,
       lesson_id: lessonId,
       status: "completed",
-      score: score ?? 0,
+      score: savedScore,
       completed_at: new Date().toISOString(),
     },
     { onConflict: "user_id,lesson_id" }
