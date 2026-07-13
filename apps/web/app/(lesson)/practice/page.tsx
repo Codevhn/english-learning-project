@@ -24,14 +24,9 @@ export default async function PracticePage() {
     .order("answered_at", { ascending: false })
     .limit(100);
 
-  // Deduplicate: keep the latest row per exercise_id
-  const seen = new Set<string>();
+  // user_exercise_history has a unique(user_id, exercise_id) constraint,
+  // so each exercise can only appear once here already.
   const practiceItems: PracticeItem[] = (historyItems ?? [])
-    .filter((item) => {
-      if (seen.has(item.exercise_id)) return false;
-      seen.add(item.exercise_id);
-      return true;
-    })
     .slice(0, 20)
     .flatMap((item) => {
       const exercise = item.exercises as unknown as Tables<"exercises"> | null;

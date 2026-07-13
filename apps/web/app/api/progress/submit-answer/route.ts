@@ -18,19 +18,39 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Missing exerciseId" }, { status: 400 });
   }
 
-  // Initialize SM-2 state so the exercise appears in the practice queue
-  const result = sm2(DEFAULT_CARD, isCorrect ? 4 : 1);
+  // Continue this exercise's existing SM-2 schedule if one exists, so the
+  // review interval actually grows across sessions instead of resetting
+  // to day-1 every time the exercise is answered inside a lesson.
+  const { data: existing } = await supabase
+    .from("user_exercise_history")
+    .select("ease_factor, interval_days, repetitions")
+    .eq("user_id", user.id)
+    .eq("exercise_id", exerciseId)
+    .single();
 
-  await supabase.from("user_exercise_history").insert({
-    user_id: user.id,
-    exercise_id: exerciseId,
-    was_correct: isCorrect,
-    ease_factor: result.easeFactor,
-    interval_days: result.intervalDays,
-    repetitions: result.repetitions,
-    next_review_at: result.nextReviewAt.toISOString(),
-    answered_at: new Date().toISOString(),
-  });
+  const card = existing
+    ? {
+        easeFactor: Number(existing.ease_factor),
+        intervalDays: existing.interval_days,
+        repetitions: existing.repetitions,
+      }
+    : DEFAULT_CARD;
+
+  const result = sm2(card, isCorrect ? 4 : 1);
+
+  await supabase.from("user_exercise_history").upsert(
+    {
+      user_id: user.id,
+      exercise_id: exerciseId,
+      was_correct: isCorrect,
+      ease_factor: result.easeFactor,
+      interval_days: result.intervalDays,
+      repetitions: result.repetitions,
+      next_review_at: result.nextReviewAt.toISOString(),
+      answered_at: new Date().toISOString(),
+    },
+    { onConflict: "user_id,exercise_id" }
+  );
 
   return NextResponse.json({ ok: true });
 }
