@@ -15,6 +15,7 @@ import { Dictation } from "@/components/exercises/Dictation";
 import { ReverseTranslation } from "@/components/exercises/ReverseTranslation";
 import { WordBankFill } from "@/components/exercises/WordBankFill";
 import { ErrorCorrection } from "@/components/exercises/ErrorCorrection";
+import { DialogueFill } from "@/components/exercises/DialogueFill";
 import { LessonComplete } from "@/components/lesson/LessonComplete";
 import { LessonLearnScreen, type TheoryContent } from "@/components/lesson/LessonLearnScreen";
 import { Button } from "@/components/ui/Button";
@@ -223,6 +224,7 @@ export function LessonPlayer({
     subtext?: string;
     audio_text?: string;
     error_word?: string;
+    lines?: { speaker: string; text: string }[];
   };
   const correctAnswer = currentExercise.correct_answer as {
     text?: string;
@@ -392,6 +394,17 @@ export function LessonPlayer({
             />
           )}
 
+          {currentExercise.exercise_type === "dialogue_fill" && (
+            <DialogueFill
+              key={queue[0]}
+              lines={prompt.lines ?? []}
+              correctAnswer={correctAnswer.text ?? ""}
+              distractors={distractors ?? []}
+              onAnswer={handleAnswer}
+              disabled={isDisabled}
+            />
+          )}
+
           {![
             "multiple_choice",
             "flashcard",
@@ -405,6 +418,7 @@ export function LessonPlayer({
             "reverse_translation",
             "word_bank_fill",
             "error_correction",
+            "dialogue_fill",
           ].includes(currentExercise.exercise_type) && (
             <div className="text-center">
               <p className="text-[15px] text-[#555555] mb-6">

@@ -377,7 +377,8 @@ export type ExerciseType =
   | "dictation"
   | "reverse_translation"
   | "word_bank_fill"
-  | "error_correction";
+  | "error_correction"
+  | "dialogue_fill";
 
 export type ProgressStatus = "not_started" | "in_progress" | "completed";
 
