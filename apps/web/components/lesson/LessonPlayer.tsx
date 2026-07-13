@@ -11,6 +11,8 @@ import { WordMatch } from "@/components/exercises/WordMatch";
 import { ReorderWords } from "@/components/exercises/ReorderWords";
 import { Listening } from "@/components/exercises/Listening";
 import { Speaking } from "@/components/exercises/Speaking";
+import { Dictation } from "@/components/exercises/Dictation";
+import { ReverseTranslation } from "@/components/exercises/ReverseTranslation";
 import { LessonComplete } from "@/components/lesson/LessonComplete";
 import { LessonLearnScreen, type TheoryContent } from "@/components/lesson/LessonLearnScreen";
 import { Button } from "@/components/ui/Button";
@@ -342,6 +344,27 @@ export function LessonPlayer({
             />
           )}
 
+          {currentExercise.exercise_type === "dictation" && (
+            <Dictation
+              key={queue[0]}
+              instruction={prompt.text}
+              audioText={prompt.audio_text ?? correctAnswer.text ?? ""}
+              accepted={correctAnswer.accepted ?? [correctAnswer.text ?? ""]}
+              onAnswer={handleAnswer}
+              disabled={isDisabled}
+            />
+          )}
+
+          {currentExercise.exercise_type === "reverse_translation" && (
+            <ReverseTranslation
+              key={queue[0]}
+              prompt={prompt.text}
+              accepted={correctAnswer.accepted ?? [correctAnswer.text ?? ""]}
+              onAnswer={handleAnswer}
+              disabled={isDisabled}
+            />
+          )}
+
           {![
             "multiple_choice",
             "flashcard",
@@ -351,6 +374,8 @@ export function LessonPlayer({
             "reorder_words",
             "listening",
             "speaking",
+            "dictation",
+            "reverse_translation",
           ].includes(currentExercise.exercise_type) && (
             <div className="text-center">
               <p className="text-[15px] text-[#555555] mb-6">
