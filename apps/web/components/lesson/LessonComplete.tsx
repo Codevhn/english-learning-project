@@ -16,7 +16,7 @@ interface NewAchievement {
 interface LessonCompleteProps {
   score: number;
   xpEarned: number;
-  courseSlug: string;
+  moreLessonsHref: string;
   lessonHref: string;
   newAchievements?: NewAchievement[];
   saveFailed?: boolean;
@@ -26,7 +26,7 @@ interface LessonCompleteProps {
 export function LessonComplete({
   score,
   xpEarned,
-  courseSlug,
+  moreLessonsHref,
   lessonHref,
   newAchievements = [],
   saveFailed = false,
@@ -143,7 +143,7 @@ export function LessonComplete({
             </Button>
           )}
           <Button
-            onClick={() => router.push(`/courses/${courseSlug}`)}
+            onClick={() => router.push(moreLessonsHref)}
             variant={mastered ? "primary" : "secondary"}
             className="w-full"
             size="lg"

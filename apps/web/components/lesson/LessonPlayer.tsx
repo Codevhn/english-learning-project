@@ -51,7 +51,7 @@ interface LessonPlayerProps {
   lessonTitle: string;
   xpReward: number;
   exercises: Exercise[];
-  courseSlug: string;
+  moreLessonsHref: string;
   lessonHref: string;
   theoryContent?: TheoryContent | null;
 }
@@ -61,7 +61,7 @@ export function LessonPlayer({
   lessonTitle,
   xpReward,
   exercises,
-  courseSlug,
+  moreLessonsHref,
   lessonHref,
   theoryContent,
 }: LessonPlayerProps) {
@@ -209,7 +209,7 @@ export function LessonPlayer({
       <LessonComplete
         score={phase.score}
         xpEarned={phase.xpEarned}
-        courseSlug={courseSlug}
+        moreLessonsHref={moreLessonsHref}
         lessonHref={lessonHref}
         newAchievements={phase.newAchievements}
         saveFailed={phase.saveFailed}

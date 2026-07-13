@@ -7,27 +7,22 @@ import type { TheoryContent } from "@/components/lesson/LessonLearnScreen";
 
 interface Props {
   params: Promise<{
-    slug: string;
-    unitOrder: string;
+    domainSlug: string;
     moduleOrder: string;
     lessonOrder: string;
   }>;
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const { slug, unitOrder, moduleOrder, lessonOrder } = await params;
+  const { domainSlug, moduleOrder, lessonOrder } = await params;
   const supabase = await createClient();
 
-  const { data: course } = await supabase
-    .from("courses").select("id").eq("slug", slug).single();
-  if (!course) return { title: "Lección" };
-
-  const { data: unit } = await supabase
-    .from("units").select("id").eq("course_id", course.id).eq("order_index", parseInt(unitOrder)).single();
-  if (!unit) return { title: "Lección" };
+  const { data: domain } = await supabase
+    .from("domains").select("id").eq("slug", domainSlug).single();
+  if (!domain) return { title: "Lección" };
 
   const { data: mod } = await supabase
-    .from("modules").select("id").eq("unit_id", unit.id).eq("order_index", parseInt(moduleOrder)).single();
+    .from("modules").select("id").eq("domain_id", domain.id).eq("order_index", parseInt(moduleOrder)).single();
   if (!mod) return { title: "Lección" };
 
   const { data: lesson } = await supabase
@@ -37,20 +32,16 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   return { title: titleObj?.["es"] ?? "Lección" };
 }
 
-export default async function LessonPage({ params }: Props) {
-  const { slug, unitOrder, moduleOrder, lessonOrder } = await params;
+export default async function DomainLessonPage({ params }: Props) {
+  const { domainSlug, moduleOrder, lessonOrder } = await params;
   const supabase = await createClient();
 
-  const { data: course } = await supabase
-    .from("courses").select("id, slug").eq("slug", slug).single();
-  if (!course) notFound();
-
-  const { data: unit } = await supabase
-    .from("units").select("id").eq("course_id", course.id).eq("order_index", parseInt(unitOrder)).single();
-  if (!unit) notFound();
+  const { data: domain } = await supabase
+    .from("domains").select("id, slug").eq("slug", domainSlug).eq("is_published", true).single();
+  if (!domain) notFound();
 
   const { data: mod } = await supabase
-    .from("modules").select("id").eq("unit_id", unit.id).eq("order_index", parseInt(moduleOrder)).single();
+    .from("modules").select("id").eq("domain_id", domain.id).eq("order_index", parseInt(moduleOrder)).eq("is_published", true).single();
   if (!mod) notFound();
 
   const { data: lesson } = await supabase
@@ -78,8 +69,8 @@ export default async function LessonPage({ params }: Props) {
       lessonTitle={title}
       xpReward={lesson.xp_reward ?? 10}
       exercises={exercises as Tables<"exercises">[]}
-      moreLessonsHref={`/courses/${slug}`}
-      lessonHref={`/courses/${slug}/units/${unitOrder}/modules/${moduleOrder}/lessons/${lessonOrder}`}
+      moreLessonsHref={`/enfoques/${domainSlug}`}
+      lessonHref={`/enfoques/${domainSlug}/modules/${moduleOrder}/lessons/${lessonOrder}`}
       theoryContent={lesson.theory_content as TheoryContent | null}
     />
   );

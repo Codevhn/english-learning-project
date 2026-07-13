@@ -15,6 +15,7 @@ const navItems = [
   { href: "/dashboard", label: "Inicio" },
   { href: "/courses", label: "Cursos" },
   { href: "/practice", label: "Practicar" },
+  { href: "/enfoques", label: "Enfoques" },
   { href: "/leaderboard", label: "Ranking" },
 ];
 
