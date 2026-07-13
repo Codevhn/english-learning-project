@@ -1,9 +1,18 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { Mic, Square } from "lucide-react";
+import { Mic, Square, Volume2 } from "lucide-react";
 import { cn } from "@/lib/cn";
 import { Button } from "@/components/ui/Button";
+
+function speakModel(text: string) {
+  if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+  window.speechSynthesis.cancel();
+  const utterance = new SpeechSynthesisUtterance(text);
+  utterance.lang = "en-US";
+  utterance.rate = 0.85;
+  window.speechSynthesis.speak(utterance);
+}
 
 interface SpeakingProps {
   instruction: string;
@@ -58,6 +67,7 @@ export function Speaking({
   const [recording, setRecording] = useState(false);
   const [transcript, setTranscript] = useState<string | null>(null);
   const [permissionDenied, setPermissionDenied] = useState(false);
+  const [modelPlayed, setModelPlayed] = useState(false);
   const recognitionRef = useRef<SpeechRecognition | null>(null);
 
   const Ctor =
@@ -65,10 +75,18 @@ export function Speaking({
       ? window.SpeechRecognition ?? window.webkitSpeechRecognition
       : undefined;
   const supported = !!Ctor;
+  const ttsSupported =
+    typeof window !== "undefined" && "speechSynthesis" in window;
+  const canRecord = modelPlayed || !ttsSupported;
   const acceptedList = accepted ?? [targetText];
 
+  function handlePlayModel() {
+    setModelPlayed(true);
+    speakModel(targetText);
+  }
+
   function handleStart() {
-    if (!Ctor || disabled || transcript) return;
+    if (!Ctor || disabled || transcript || !canRecord) return;
     const recognition = new Ctor();
     recognition.lang = "en-US";
     recognition.continuous = false;
@@ -114,17 +132,29 @@ export function Speaking({
 
       {supported ? (
         <>
-          <div className="flex justify-center mb-6">
+          <div className="flex justify-center items-center gap-4 mb-6">
+            {ttsSupported && (
+              <button
+                type="button"
+                onClick={handlePlayModel}
+                disabled={disabled}
+                className="flex items-center justify-center size-11 rounded-full border border-[#D1D1D1] bg-white text-[#555555] hover:bg-[#F8F8F8] transition-colors duration-150"
+                aria-label="Escuchar pronunciación modelo"
+                title="Escuchar pronunciación modelo"
+              >
+                <Volume2 className="size-5" strokeWidth={2} />
+              </button>
+            )}
             <button
               type="button"
               onClick={recording ? handleStop : handleStart}
-              disabled={disabled || !!transcript}
+              disabled={disabled || !!transcript || !canRecord}
               className={cn(
                 "flex items-center justify-center size-16 rounded-full border transition-colors duration-150",
                 recording
                   ? "border-[#DC2626] bg-[#FEF2F2] text-[#DC2626] animate-pulse"
                   : "border-[#1D4ED8] bg-[#EEF2FF] text-[#1D4ED8] hover:bg-[#E0E7FF]",
-                (disabled || !!transcript) && "opacity-50 cursor-not-allowed"
+                (disabled || !!transcript || !canRecord) && "opacity-50 cursor-not-allowed"
               )}
             >
               {recording ? (
@@ -138,6 +168,8 @@ export function Speaking({
           <p className="text-[13px] text-[#AAAAAA] text-center mb-4">
             {permissionDenied
               ? "Permite el acceso al micrófono para grabar tu voz."
+              : !canRecord
+              ? "Escucha primero la pronunciación modelo."
               : recording
               ? "Escuchando... toca de nuevo para detener."
               : transcript

@@ -13,6 +13,8 @@ import { Listening } from "@/components/exercises/Listening";
 import { Speaking } from "@/components/exercises/Speaking";
 import { Dictation } from "@/components/exercises/Dictation";
 import { ReverseTranslation } from "@/components/exercises/ReverseTranslation";
+import { WordBankFill } from "@/components/exercises/WordBankFill";
+import { ErrorCorrection } from "@/components/exercises/ErrorCorrection";
 import { LessonComplete } from "@/components/lesson/LessonComplete";
 import { LessonLearnScreen, type TheoryContent } from "@/components/lesson/LessonLearnScreen";
 import { Button } from "@/components/ui/Button";
@@ -220,6 +222,7 @@ export function LessonPlayer({
     text: string;
     subtext?: string;
     audio_text?: string;
+    error_word?: string;
   };
   const correctAnswer = currentExercise.correct_answer as {
     text?: string;
@@ -227,6 +230,7 @@ export function LessonPlayer({
     phonetic?: string;
     note?: string;
     pairs?: { en: string; es: string }[];
+    answers?: string[];
   };
   const distractors = currentExercise.distractors as string[] | null;
   const isDisabled = phase.name === "feedback";
@@ -365,6 +369,29 @@ export function LessonPlayer({
             />
           )}
 
+          {currentExercise.exercise_type === "word_bank_fill" && (
+            <WordBankFill
+              key={queue[0]}
+              prompt={prompt.text}
+              answers={correctAnswer.answers ?? []}
+              distractors={distractors ?? []}
+              onAnswer={handleAnswer}
+              disabled={isDisabled}
+            />
+          )}
+
+          {currentExercise.exercise_type === "error_correction" && (
+            <ErrorCorrection
+              key={queue[0]}
+              sentence={prompt.text}
+              errorWord={prompt.error_word ?? ""}
+              correctWord={correctAnswer.text ?? ""}
+              distractors={distractors ?? []}
+              onAnswer={handleAnswer}
+              disabled={isDisabled}
+            />
+          )}
+
           {![
             "multiple_choice",
             "flashcard",
@@ -376,6 +403,8 @@ export function LessonPlayer({
             "speaking",
             "dictation",
             "reverse_translation",
+            "word_bank_fill",
+            "error_correction",
           ].includes(currentExercise.exercise_type) && (
             <div className="text-center">
               <p className="text-[15px] text-[#555555] mb-6">

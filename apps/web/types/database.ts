@@ -375,7 +375,9 @@ export type ExerciseType =
   | "flashcard"
   | "reorder_words"
   | "dictation"
-  | "reverse_translation";
+  | "reverse_translation"
+  | "word_bank_fill"
+  | "error_correction";
 
 export type ProgressStatus = "not_started" | "in_progress" | "completed";
 
