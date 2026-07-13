@@ -368,12 +368,14 @@ export function LessonPlayer({
       {phase.name === "feedback" && (
         <div
           className={`border-t-[3px] ${
-            phase.isCorrect ? "border-[#16A34A]" : "border-[#DC2626]"
-          } bg-white px-6 py-5`}
+            phase.isCorrect
+              ? "border-[#16A34A] bg-[#F0FDF4]"
+              : "border-[#DC2626] bg-[#FEF2F2]"
+          } px-6 py-6`}
         >
           <div className="max-w-lg mx-auto">
             <p
-              className={`text-[15px] font-semibold mb-1 ${
+              className={`text-[22px] font-bold mb-2 ${
                 phase.isCorrect ? "text-[#16A34A]" : "text-[#DC2626]"
               }`}
             >
@@ -386,20 +388,20 @@ export function LessonPlayer({
                 : "Incorrecto"}
             </p>
             {!phase.isCorrect && !phase.isFlashcard && !phase.isMatch && (
-              <p className="text-[14px] text-[#555555] mb-1">
-                Respuesta:{" "}
-                <span className="font-medium text-[#111111]">
+              <p className="text-[15px] text-[#444444] mb-2">
+                Respuesta correcta:{" "}
+                <span className="font-semibold text-[#111111]">
                   {phase.correctAnswer}
                 </span>
               </p>
             )}
             {phase.explanation && (
-              <p className="text-[13px] text-[#777777] mb-4">
+              <p className="text-[14px] text-[#555555] mb-4">
                 {phase.explanation}
               </p>
             )}
             {!phase.isCorrect && (
-              <p className="text-[12px] text-[#999999] mb-4">
+              <p className="text-[13px] text-[#888888] mb-4">
                 Este ejercicio volverá a aparecer más adelante — tienes que
                 resolverlo bien para terminar la lección.
               </p>
