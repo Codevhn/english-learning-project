@@ -1,25 +1,59 @@
 -- 005_a1_reseed.sql
 -- Full A1 curriculum reseed: 12 modules, 55 lessons, ~440 exercises
 -- Run AFTER 001_initial_schema.sql, 002_seed.sql, 003_modules.sql
+--
+-- IMPORTANT: this script hardcodes order_index 1-12 for its own modules.
+-- If 006_grammar_gap_fix.sql already ran and reordered modules (moved
+-- "Verbo To Be" earlier, inserted module 13), re-running THIS script alone
+-- resets that ordering back to 1-12. If you ever need to re-run 005,
+-- always re-run 006 and 007 immediately after to restore correct order
+-- and recreate modules 13-15.
 
 -- ===========================================================================
--- CLEANUP: Remove ALL existing A1 content (old flat lessons + new module-based)
+-- CLEANUP: Remove existing content for THIS FILE'S 12 modules only.
+-- Scoped to these specific module IDs (not unit_id!) so this script never
+-- touches modules 13-15, which are owned by 006_grammar_gap_fix.sql and
+-- 007_listening_speaking.sql and share the same unit_id.
 -- ===========================================================================
 
--- Delete exercises for ALL A1 lessons (both old module_id=NULL and new)
 DELETE FROM exercises
 WHERE lesson_id IN (
   SELECT id FROM lessons
-  WHERE unit_id = '00000000-0000-0000-0001-000000000001'
+  WHERE module_id IN (
+    '00000001-0000-0000-0000-000000000001','00000001-0000-0000-0000-000000000002',
+    '00000001-0000-0000-0000-000000000003','00000001-0000-0000-0000-000000000004',
+    '00000001-0000-0000-0000-000000000005','00000001-0000-0000-0000-000000000006',
+    '00000001-0000-0000-0000-000000000007','00000001-0000-0000-0000-000000000008',
+    '00000001-0000-0000-0000-000000000009','00000001-0000-0000-0000-000000000010',
+    '00000001-0000-0000-0000-000000000011','00000001-0000-0000-0000-000000000012'
+  )
+  -- also catch pre-module-architecture lessons (module_id was NULL) for this unit
+  OR lesson_id IN (
+    SELECT id FROM lessons
+    WHERE unit_id = '00000000-0000-0000-0001-000000000001' AND module_id IS NULL
+  )
 );
 
--- Delete ALL A1 lessons regardless of whether they have a module_id
 DELETE FROM lessons
-WHERE unit_id = '00000000-0000-0000-0001-000000000001';
+WHERE module_id IN (
+  '00000001-0000-0000-0000-000000000001','00000001-0000-0000-0000-000000000002',
+  '00000001-0000-0000-0000-000000000003','00000001-0000-0000-0000-000000000004',
+  '00000001-0000-0000-0000-000000000005','00000001-0000-0000-0000-000000000006',
+  '00000001-0000-0000-0000-000000000007','00000001-0000-0000-0000-000000000008',
+  '00000001-0000-0000-0000-000000000009','00000001-0000-0000-0000-000000000010',
+  '00000001-0000-0000-0000-000000000011','00000001-0000-0000-0000-000000000012'
+)
+OR (unit_id = '00000000-0000-0000-0001-000000000001' AND module_id IS NULL);
 
--- Delete all A1 modules
 DELETE FROM modules
-WHERE unit_id = '00000000-0000-0000-0001-000000000001';
+WHERE id IN (
+  '00000001-0000-0000-0000-000000000001','00000001-0000-0000-0000-000000000002',
+  '00000001-0000-0000-0000-000000000003','00000001-0000-0000-0000-000000000004',
+  '00000001-0000-0000-0000-000000000005','00000001-0000-0000-0000-000000000006',
+  '00000001-0000-0000-0000-000000000007','00000001-0000-0000-0000-000000000008',
+  '00000001-0000-0000-0000-000000000009','00000001-0000-0000-0000-000000000010',
+  '00000001-0000-0000-0000-000000000011','00000001-0000-0000-0000-000000000012'
+);
 
 -- ===========================================================================
 -- ALL 12 MODULES: A1 Unit
