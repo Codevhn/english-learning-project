@@ -46,6 +46,8 @@ type Phase =
       xpEarned: number;
       newAchievements: NewAchievement[];
       saveFailed?: boolean;
+      isLevelExam?: boolean;
+      failedTags?: string[];
     };
 
 interface LessonPlayerProps {
@@ -56,6 +58,7 @@ interface LessonPlayerProps {
   moreLessonsHref: string;
   lessonHref: string;
   theoryContent?: TheoryContent | null;
+  isLevelExam?: boolean;
 }
 
 export function LessonPlayer({
@@ -66,6 +69,7 @@ export function LessonPlayer({
   moreLessonsHref,
   lessonHref,
   theoryContent,
+  isLevelExam = false,
 }: LessonPlayerProps) {
   const router = useRouter();
   // Failed exercises are pushed to the back of the queue instead of being
@@ -77,6 +81,7 @@ export function LessonPlayer({
   const [masteredCount, setMasteredCount] = useState(0);
   const [attemptedOnce, setAttemptedOnce] = useState<Set<number>>(new Set());
   const [firstAttemptCorrect, setFirstAttemptCorrect] = useState(0);
+  const [failedTags, setFailedTags] = useState<Set<string>>(new Set());
   const [phase, setPhase] = useState<Phase>(
     theoryContent ? { name: "learning" } : { name: "exercising" }
   );
@@ -94,7 +99,14 @@ export function LessonPlayer({
       // toward the score, otherwise every session would end at 100%.
       if (!attemptedOnce.has(idx)) {
         setAttemptedOnce((s) => new Set(s).add(idx));
-        if (isCorrect) setFirstAttemptCorrect((c) => c + 1);
+        if (isCorrect) {
+          setFirstAttemptCorrect((c) => c + 1);
+        } else if (isLevelExam) {
+          const tags = currentExercise.tags ?? [];
+          if (tags.length > 0) {
+            setFailedTags((s) => new Set([...s, ...tags]));
+          }
+        }
       }
 
       const explanationObj = currentExercise.explanation as Record<
@@ -123,7 +135,7 @@ export function LessonPlayer({
         }),
       }).catch(() => {});
     },
-    [queue, attemptedOnce, currentExercise]
+    [queue, attemptedOnce, currentExercise, isLevelExam]
   );
 
   const submitCompletion = useCallback(
@@ -163,6 +175,8 @@ export function LessonPlayer({
           score: finalScore,
           xpEarned: data.xpEarned ?? xpReward,
           newAchievements: data.newAchievements ?? [],
+          isLevelExam,
+          failedTags: Array.from(failedTags),
         });
       } catch {
         setPhase({
@@ -171,6 +185,8 @@ export function LessonPlayer({
           xpEarned: 0,
           newAchievements: [],
           saveFailed: true,
+          isLevelExam,
+          failedTags: Array.from(failedTags),
         });
       }
       setIsCompleting(false);
@@ -178,7 +194,7 @@ export function LessonPlayer({
       setQueue(nextQueue);
       setPhase({ name: "exercising" });
     }
-  }, [phase, queue, firstAttemptCorrect, exercises.length, submitCompletion, xpReward]);
+  }, [phase, queue, firstAttemptCorrect, exercises.length, submitCompletion, xpReward, isLevelExam, failedTags]);
 
   const handleRetrySave = useCallback(async () => {
     if (phase.name !== "completed") return;
@@ -189,6 +205,8 @@ export function LessonPlayer({
         score: phase.score,
         xpEarned: data.xpEarned ?? xpReward,
         newAchievements: data.newAchievements ?? [],
+        isLevelExam: phase.isLevelExam,
+        failedTags: phase.failedTags,
       });
     } catch {
       // still failing — leave saveFailed banner up for another retry
@@ -216,6 +234,8 @@ export function LessonPlayer({
         newAchievements={phase.newAchievements}
         saveFailed={phase.saveFailed}
         onRetrySave={handleRetrySave}
+        isLevelExam={phase.isLevelExam}
+        failedTags={phase.failedTags}
       />
     );
   }

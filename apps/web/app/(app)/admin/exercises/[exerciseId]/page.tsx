@@ -32,6 +32,7 @@ export default async function AdminExerciseDetailPage({ params, searchParams }: 
     correct_answer: unknown;
     distractors: unknown;
     explanation: unknown;
+    tags: string[] | null;
   } | null;
 
   const lessonId = isNew ? lessonIdParam : exercise?.lesson_id;
@@ -59,6 +60,7 @@ export default async function AdminExerciseDetailPage({ params, searchParams }: 
     explanationJson: exercise?.explanation
       ? JSON.stringify(exercise.explanation, null, 2)
       : "",
+    tags: (exercise?.tags ?? []).join(", "),
   };
 
   return (

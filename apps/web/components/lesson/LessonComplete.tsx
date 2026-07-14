@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { TriangleAlert } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { getAchievementIcon } from "@/lib/achievementIcons";
-import { MASTERY_THRESHOLD, isMastered } from "@/lib/mastery";
+import { MASTERY_THRESHOLD, isMastered, LEVEL_EXAM_PASS_THRESHOLD, passedLevelExam } from "@/lib/mastery";
 
 interface NewAchievement {
   slug: string;
@@ -21,6 +21,8 @@ interface LessonCompleteProps {
   newAchievements?: NewAchievement[];
   saveFailed?: boolean;
   onRetrySave?: () => Promise<void>;
+  isLevelExam?: boolean;
+  failedTags?: string[];
 }
 
 export function LessonComplete({
@@ -31,10 +33,12 @@ export function LessonComplete({
   newAchievements = [],
   saveFailed = false,
   onRetrySave,
+  isLevelExam = false,
+  failedTags = [],
 }: LessonCompleteProps) {
   const router = useRouter();
   const [retrying, setRetrying] = useState(false);
-  const mastered = isMastered(score);
+  const mastered = isLevelExam ? passedLevelExam(score) : isMastered(score);
 
   async function handleRetry() {
     if (!onRetrySave || retrying) return;
@@ -62,19 +66,45 @@ export function LessonComplete({
         </div>
 
         <h1 className="text-[26px] font-semibold text-[#111111] mb-2">
-          {score === 100
+          {isLevelExam
+            ? mastered
+              ? "¡Examen aprobado!"
+              : "Aún no apruebas el examen"
+            : score === 100
             ? "¡Lección perfecta!"
             : mastered
             ? "¡Lección completada!"
             : "Necesitas reforzar esta lección"}
         </h1>
         <p className="text-[15px] text-[#555555] mb-8">
-          {score === 100
+          {isLevelExam
+            ? mastered
+              ? "Certificaste este nivel completo — felicidades."
+              : `Tu precisión fue del ${score}%. Necesitas al menos ${LEVEL_EXAM_PASS_THRESHOLD}% para aprobar el examen de nivel.`
+            : score === 100
             ? "Resolviste todos los ejercicios a la primera."
             : mastered
             ? "Buen trabajo. Sigue practicando para reforzar lo aprendido."
             : `Tu precisión a la primera fue del ${score}%. Necesitas al menos ${MASTERY_THRESHOLD}% para desbloquear la siguiente lección.`}
         </p>
+
+        {isLevelExam && !mastered && failedTags.length > 0 && (
+          <div className="bg-[#FFFBEB] border border-[#FEF3C7] rounded-[6px] px-4 py-3 mb-6 text-left">
+            <p className="text-[13px] font-medium text-[#92400E] mb-1.5">
+              Repasa estos temas antes de reintentar:
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {failedTags.map((tag) => (
+                <span
+                  key={tag}
+                  className="text-[12px] bg-white border border-[#FEF3C7] text-[#92400E] rounded-full px-2.5 py-0.5"
+                >
+                  {tag}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
 
         {saveFailed && (
           <div className="flex items-start gap-2.5 bg-[#FEF2F2] border border-[#FECACA] rounded-[6px] px-4 py-3 mb-6 text-left">
@@ -139,7 +169,7 @@ export function LessonComplete({
               className="w-full"
               size="lg"
             >
-              Repetir lección
+              {isLevelExam ? "Reintentar examen" : "Repetir lección"}
             </Button>
           )}
           <Button
@@ -148,7 +178,7 @@ export function LessonComplete({
             className="w-full"
             size="lg"
           >
-            Ver más lecciones
+            {isLevelExam ? "Volver al curso" : "Ver más lecciones"}
           </Button>
           <Button
             onClick={() => router.push("/dashboard")}

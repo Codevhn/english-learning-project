@@ -6,8 +6,9 @@ import { Check } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { Lock, Award } from "lucide-react";
 import { CEFR_COLORS } from "@/lib/levels";
-import { isMastered } from "@/lib/mastery";
+import { isMastered, passedLevelExam } from "@/lib/mastery";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -104,6 +105,33 @@ export default async function CourseDetailPage({ params }: Props) {
     modulesByUnit.get(m.unit_id!)!.push(m);
   }
 
+  // Level exams (Fase D.2) — one per unit, module_id is null.
+  const { data: examLessons } =
+    unitIds.length > 0
+      ? await supabase
+          .from("lessons")
+          .select("id, unit_id")
+          .in("unit_id", unitIds)
+          .eq("lesson_type", "level_exam")
+          .eq("is_published", true)
+      : { data: [] };
+
+  const examLessonByUnit = new Map(
+    (examLessons ?? []).map((e) => [e.unit_id, e])
+  );
+  const examLessonIds = (examLessons ?? []).map((e) => e.id);
+  const { data: examProgressData } =
+    user && examLessonIds.length > 0
+      ? await supabase
+          .from("user_progress")
+          .select("lesson_id, status, score")
+          .eq("user_id", user.id)
+          .in("lesson_id", examLessonIds)
+      : { data: [] };
+  const examProgressByLesson = new Map(
+    (examProgressData ?? []).map((p) => [p.lesson_id, p])
+  );
+
   const titleObj = course.title as Record<string, string> | null;
   const descObj = course.description as Record<string, string> | null;
   const courseTitle = titleObj?.["es"] ?? titleObj?.["en"] ?? "";
@@ -140,6 +168,24 @@ export default async function CourseDetailPage({ params }: Props) {
           const unitTitleObj = unit.title as Record<string, string> | null;
           const unitTitle = unitTitleObj?.["es"] ?? unitTitleObj?.["en"] ?? "";
           const unitModules = modulesByUnit.get(unit.id) ?? [];
+          const allModulesMastered =
+            unitModules.length > 0 &&
+            unitModules.every((mod) => {
+              const modLessons = lessonsByModule.get(mod.id) ?? [];
+              return (
+                modLessons.length > 0 &&
+                modLessons.every((l) => {
+                  const p = progressMap.get(l.id);
+                  return p?.status === "completed" && isMastered(p.score);
+                })
+              );
+            });
+          const examLesson = examLessonByUnit.get(unit.id);
+          const examProgress = examLesson
+            ? examProgressByLesson.get(examLesson.id)
+            : undefined;
+          const examPassed =
+            examProgress?.status === "completed" && passedLevelExam(examProgress.score);
 
           return (
             <div key={unit.id}>
@@ -233,6 +279,55 @@ export default async function CourseDetailPage({ params }: Props) {
                   );
                 })}
               </div>
+
+              {examLesson && (
+                <Card
+                  className={`mt-3 ${!allModulesMastered ? "opacity-60" : ""}`}
+                >
+                  <CardContent className="py-4 flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-4 min-w-0 flex-1">
+                      <div
+                        className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${
+                          examPassed
+                            ? "bg-[#ECFDF5] text-[#16A34A]"
+                            : "bg-[#FFFBEB] text-[#D97706]"
+                        }`}
+                      >
+                        {examPassed ? (
+                          <Check className="w-4 h-4" strokeWidth={2.5} />
+                        ) : (
+                          <Award className="w-4 h-4" strokeWidth={2} />
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[15px] font-medium text-[#111111] truncate">
+                          Examen Final de {unit.cefr_level}
+                        </p>
+                        <p className="text-[12px] text-[#AAAAAA]">
+                          {allModulesMastered
+                            ? "Certifica que dominas todo el nivel."
+                            : "Domina todos los módulos para desbloquearlo."}
+                        </p>
+                      </div>
+                    </div>
+                    {allModulesMastered ? (
+                      <Link
+                        href={`/courses/${slug}/units/${unit.order_index}/exam`}
+                        className="shrink-0"
+                      >
+                        <Button variant={examPassed ? "secondary" : "primary"} size="sm">
+                          {examPassed ? "Repasar" : "Comenzar"}
+                        </Button>
+                      </Link>
+                    ) : (
+                      <span className="flex items-center gap-1.5 text-[13px] text-[#CCCCCC] shrink-0">
+                        <Lock className="w-3.5 h-3.5" strokeWidth={2} />
+                        Bloqueado
+                      </span>
+                    )}
+                  </CardContent>
+                </Card>
+              )}
             </div>
           );
         })}

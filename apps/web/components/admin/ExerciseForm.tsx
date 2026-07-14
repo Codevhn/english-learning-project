@@ -20,6 +20,7 @@ interface ExerciseFormProps {
     correctAnswerJson: string;
     distractorsJson: string;
     explanationJson: string;
+    tags: string;
   };
 }
 
@@ -40,6 +41,7 @@ export function ExerciseForm({ exerciseId, lessonId, initial }: ExerciseFormProp
   const [correctAnswerJson, setCorrectAnswerJson] = useState(initial.correctAnswerJson);
   const [distractorsJson, setDistractorsJson] = useState(initial.distractorsJson);
   const [explanationJson, setExplanationJson] = useState(initial.explanationJson);
+  const [tags, setTags] = useState(initial.tags);
   const [saving, setSaving] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
@@ -79,6 +81,10 @@ export function ExerciseForm({ exerciseId, lessonId, initial }: ExerciseFormProp
       correct_answer: correctAnswer.value as Json,
       distractors: distractors.value as Json | null,
       explanation: explanation.value as Json | null,
+      tags: tags
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean),
     };
 
     if (exerciseId) {
@@ -187,6 +193,17 @@ export function ExerciseForm({ exerciseId, lessonId, initial }: ExerciseFormProp
           hint={`{"es": "..."}`}
           rows={2}
         />
+
+        <Input
+          label="Etiquetas / tags (separadas por coma, opcional)"
+          value={tags}
+          onChange={(e) => setTags(e.target.value)}
+          placeholder="grammar:present_simple, vocab:family"
+        />
+        <p className="text-[12px] text-[#999999] -mt-3">
+          Usadas por el examen de fin de nivel para agrupar los fallos por
+          tema. No afectan a lecciones normales.
+        </p>
 
         <div className="flex gap-3 mt-2">
           <Button onClick={handleSave} loading={saving}>
