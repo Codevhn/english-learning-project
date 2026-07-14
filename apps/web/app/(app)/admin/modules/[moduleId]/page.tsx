@@ -42,6 +42,7 @@ export default async function AdminModuleDetailPage({ params }: Props) {
     slug: string;
     title: Record<string, string> | null;
     description: Record<string, string> | null;
+    can_do_statements: string[] | null;
     order_index: number;
     is_published: boolean;
     unit_id: string | null;
@@ -54,6 +55,7 @@ export default async function AdminModuleDetailPage({ params }: Props) {
     titleEn: mod?.title?.["en"] ?? "",
     descriptionEs: mod?.description?.["es"] ?? "",
     descriptionEn: mod?.description?.["en"] ?? "",
+    canDoStatements: (mod?.can_do_statements ?? []).join("\n"),
     orderIndex: mod?.order_index ?? 1,
     isPublished: mod?.is_published ?? false,
     unitId: mod?.unit_id ?? null,

@@ -19,6 +19,7 @@ interface ModuleFormProps {
     titleEn: string;
     descriptionEs: string;
     descriptionEn: string;
+    canDoStatements: string;
     orderIndex: number;
     isPublished: boolean;
     unitId: string | null;
@@ -41,6 +42,7 @@ export function ModuleForm({ moduleId, initial, units, domains }: ModuleFormProp
   const [titleEn, setTitleEn] = useState(initial.titleEn);
   const [descriptionEs, setDescriptionEs] = useState(initial.descriptionEs);
   const [descriptionEn, setDescriptionEn] = useState(initial.descriptionEn);
+  const [canDoStatements, setCanDoStatements] = useState(initial.canDoStatements);
   const [orderIndex, setOrderIndex] = useState(initial.orderIndex);
   const [isPublished, setIsPublished] = useState(initial.isPublished);
   const [saving, setSaving] = useState(false);
@@ -58,6 +60,10 @@ export function ModuleForm({ moduleId, initial, units, domains }: ModuleFormProp
       slug: slug.trim(),
       title: { es: titleEs, en: titleEn },
       description: { es: descriptionEs, en: descriptionEn },
+      can_do_statements: canDoStatements
+        .split("\n")
+        .map((s) => s.trim())
+        .filter(Boolean),
       order_index: orderIndex,
       is_published: isPublished,
       unit_id: parentType === "unit" ? parentId : null,
@@ -178,6 +184,23 @@ export function ModuleForm({ moduleId, initial, units, domains }: ModuleFormProp
           rows={2}
           className="w-full px-3 py-2 rounded-[6px] border border-[#D1D1D1] text-[14px] text-[#111111]"
         />
+      </div>
+
+      <div className="flex flex-col gap-1.5">
+        <label className="text-[13px] font-medium text-[#111111]">
+          Puedo hacer (una afirmación por línea)
+        </label>
+        <textarea
+          value={canDoStatements}
+          onChange={(e) => setCanDoStatements(e.target.value)}
+          rows={4}
+          placeholder={"Puedo presentarme usando am/is/are.\nPuedo describir cómo es alguien o algo."}
+          className="w-full px-3 py-2 rounded-[6px] border border-[#D1D1D1] text-[14px] text-[#111111]"
+        />
+        <p className="text-[12px] text-[#999999]">
+          Solo relevante para módulos de una Unidad (CEFR) — se muestran en el
+          perfil del estudiante al dominar este módulo.
+        </p>
       </div>
 
       <Input

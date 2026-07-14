@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { Check, Lock } from "lucide-react";
 import { xpToLevel } from "@/lib/levels";
 import { getAchievementIcon } from "@/lib/achievementIcons";
+import { isMastered } from "@/lib/mastery";
 
 export const metadata: Metadata = {
   title: "Perfil",
@@ -15,7 +17,14 @@ export default async function ProfilePage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const [profileResult, statsResult, recentResult, achievementsResult] = await Promise.all([
+  const [
+    profileResult,
+    statsResult,
+    recentResult,
+    achievementsResult,
+    unitsResult,
+    modulesResult,
+  ] = await Promise.all([
     supabase
       .from("profiles")
       .select("display_name, username, created_at")
@@ -38,12 +47,72 @@ export default async function ProfilePage() {
       .select("achievement_id, earned_at, achievements(slug, title, description, icon)")
       .eq("user_id", user!.id)
       .order("earned_at", { ascending: false }),
+    supabase.from("units").select("id, cefr_level, order_index").order("order_index"),
+    // Only CEFR-path modules (unit_id not null) — Rutas de Enfoque modules
+    // don't carry can-do statements.
+    supabase
+      .from("modules")
+      .select("id, unit_id, order_index, title, can_do_statements")
+      .not("unit_id", "is", null)
+      .eq("is_published", true)
+      .order("order_index"),
   ]);
 
   const profile = profileResult.data;
   const stats = statsResult.data;
   const recent = recentResult.data ?? [];
   const achievements = achievementsResult.data ?? [];
+  const units = unitsResult.data ?? [];
+  const modules = modulesResult.data ?? [];
+
+  const moduleIds = modules.map((m) => m.id);
+  const { data: moduleLessons } =
+    moduleIds.length > 0
+      ? await supabase
+          .from("lessons")
+          .select("id, module_id")
+          .in("module_id", moduleIds)
+          .eq("is_published", true)
+      : { data: [] };
+  const lessonIds = (moduleLessons ?? []).map((l) => l.id);
+  const { data: lessonProgress } =
+    lessonIds.length > 0
+      ? await supabase
+          .from("user_progress")
+          .select("lesson_id, status, score")
+          .eq("user_id", user!.id)
+          .in("lesson_id", lessonIds)
+      : { data: [] };
+
+  const progressByLesson = new Map(
+    (lessonProgress ?? []).map((p) => [p.lesson_id, p])
+  );
+  const lessonsByModule = new Map<string, string[]>();
+  for (const l of moduleLessons ?? []) {
+    if (!lessonsByModule.has(l.module_id!)) lessonsByModule.set(l.module_id!, []);
+    lessonsByModule.get(l.module_id!)!.push(l.id);
+  }
+
+  const cefrLevelByUnit = new Map(units.map((u) => [u.id, u.cefr_level]));
+  const modulesByLevel = new Map<
+    string,
+    { title: string; statements: string[]; unlocked: boolean }[]
+  >();
+  for (const mod of modules) {
+    const level = cefrLevelByUnit.get(mod.unit_id!) ?? "?";
+    const statements = (mod.can_do_statements as string[] | null) ?? [];
+    if (statements.length === 0) continue;
+    const modLessonIds = lessonsByModule.get(mod.id) ?? [];
+    const unlocked =
+      modLessonIds.length > 0 &&
+      modLessonIds.every((lid) => {
+        const p = progressByLesson.get(lid);
+        return p?.status === "completed" && isMastered(p.score);
+      });
+    const title = (mod.title as Record<string, string> | null)?.["es"] ?? "";
+    if (!modulesByLevel.has(level)) modulesByLevel.set(level, []);
+    modulesByLevel.get(level)!.push({ title, statements, unlocked });
+  }
 
   const totalXp = stats?.total_xp ?? 0;
   const { level, label, nextLevelXp, progress, colors } = xpToLevel(totalXp);
@@ -178,6 +247,59 @@ export default async function ProfilePage() {
           </div>
         )}
       </div>
+
+      {/* Can-do statements */}
+      {modulesByLevel.size > 0 && (
+        <div>
+          <h2 className="text-[17px] font-semibold text-[#111111] mb-1">
+            Lo que puedes hacer en inglés
+          </h2>
+          <p className="text-[13px] text-[#999999] mb-4">
+            Se desbloquean al dominar cada módulo — así vas viendo tu progreso
+            en habilidades reales, no solo en porcentajes.
+          </p>
+          <div className="flex flex-col gap-6">
+            {Array.from(modulesByLevel.entries()).map(([level, mods]) => (
+              <div key={level}>
+                <div className="flex items-center gap-2 mb-2.5">
+                  <Badge variant="outline">{level}</Badge>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  {mods.flatMap((mod) =>
+                    mod.statements.map((statement, i) => (
+                      <div
+                        key={`${mod.title}-${i}`}
+                        className="flex items-center gap-2.5 py-1"
+                      >
+                        <div
+                          className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 ${
+                            mod.unlocked
+                              ? "bg-[#ECFDF5] text-[#16A34A]"
+                              : "bg-[#F3F4F6] text-[#BBBBBB]"
+                          }`}
+                        >
+                          {mod.unlocked ? (
+                            <Check className="w-3 h-3" strokeWidth={2.5} />
+                          ) : (
+                            <Lock className="w-2.5 h-2.5" strokeWidth={2.5} />
+                          )}
+                        </div>
+                        <span
+                          className={`text-[14px] ${
+                            mod.unlocked ? "text-[#111111]" : "text-[#AAAAAA]"
+                          }`}
+                        >
+                          {statement}
+                        </span>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Recent activity */}
       {recent.length > 0 && (

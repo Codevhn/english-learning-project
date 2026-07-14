@@ -160,6 +160,7 @@ export interface Database {
           slug: string;
           title: Json;
           description: Json;
+          can_do_statements: Json;
           is_published: boolean;
           created_at: string;
         };
@@ -171,6 +172,7 @@ export interface Database {
           slug: string;
           title: Json;
           description?: Json;
+          can_do_statements?: Json;
           is_published?: boolean;
           created_at?: string;
         };
@@ -181,6 +183,7 @@ export interface Database {
           slug?: string;
           title?: Json;
           description?: Json;
+          can_do_statements?: Json;
           is_published?: boolean;
         };
         Relationships: [];
