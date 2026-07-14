@@ -1,7 +1,9 @@
 # Plan de Acción — Fase D: Evaluación tipo CEFR
 
 **Fecha:** 2026-07-13
-**Estado:** Planeado, no iniciado. Este documento es la referencia a consultar antes de empezar a construir cualquier pieza de esta fase.
+**Estado — D.1 (can-do statements): RESUELTA.** `migrations/011_can_do_statements.sql` + `seed/019_can_do_statements.sql`. Nueva sección en `/profile` con afirmaciones "puedo hacer" agrupadas por nivel CEFR, más el campo correspondiente en el CMS (`ModuleForm`).
+**Estado — D.2 (examen de fin de nivel): RESUELTA.** `migrations/012_level_exam.sql` + `seed/020_level_exam_achievement.sql` + `seed/021_a1_level_exam.sql`. Examen de A1 con banco de 30 ejercicios (muestra aleatoria de 24 por intento), umbral de aprobación 85%, desglose de fallos por `tags`, logro "A1 Certificado", y entrada bloqueada/desbloqueada en la página del curso.
+**Estado — D.3 (prueba de ubicación): sigue bloqueada** — como se señaló abajo, no tiene mucho valor real hasta que exista contenido A2/B1.
 **Contexto:** el sistema actual mide progreso solo a nivel de lección individual (mastery-gate: ≥80% para desbloquear la siguiente). Esta fase agrega tres capacidades que el mastery-gate por sí solo no puede dar: ubicar a un usuario nuevo en el nivel correcto, certificar que realmente domina un nivel CEFR completo (no solo lección por lección), y comunicar el progreso en el lenguaje "puedo hacer" que usan las certificaciones reales de idiomas.
 
 ---
