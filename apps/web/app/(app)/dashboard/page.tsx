@@ -45,9 +45,12 @@ export default async function DashboardPage() {
       .select("id", { count: "exact", head: true })
       .eq("user_id", user!.id)
       .lte("next_review_at", new Date().toISOString()),
+    // Rutas de Enfoque lessons (lessons.unit_id is null) must not count
+    // toward the core course's "lecciones completadas" — filtered in JS
+    // below since it's a joined, non-count-only query.
     supabase
       .from("user_progress")
-      .select("id", { count: "exact", head: true })
+      .select("id, lessons(unit_id)")
       .eq("user_id", user!.id)
       .eq("status", "completed"),
     supabase
@@ -55,9 +58,11 @@ export default async function DashboardPage() {
       .select("id, slug, title, description, source_language, target_language")
       .eq("is_published", true)
       .limit(3),
+    // Same exclusion for the domain-unlock mastery gate — a domain lesson
+    // must never count toward unlocking domains.
     supabase
       .from("user_progress")
-      .select("id", { count: "exact", head: true })
+      .select("id, score, lessons(unit_id)")
       .eq("user_id", user!.id)
       .eq("status", "completed")
       .gte("score", MASTERY_THRESHOLD),
@@ -75,7 +80,12 @@ export default async function DashboardPage() {
   >[] | null;
 
   const reviewCount = reviewResult.count ?? 0;
-  const lessonsCompleted = progressResult.count ?? 0;
+  const corePathProgress = (progressResult.data ?? []) as {
+    lessons: { unit_id: string | null } | null;
+  }[];
+  const lessonsCompleted = corePathProgress.filter(
+    (p) => p.lessons?.unit_id != null
+  ).length;
 
   const firstName = profile?.display_name?.split(" ")[0] ?? "Estudiante";
   const totalXp = stats?.total_xp ?? 0;
@@ -88,7 +98,12 @@ export default async function DashboardPage() {
        (mainCourse.title as Record<string, string> | null)?.["en"] ?? "")
     : null;
 
-  const masteredCount = masteredResult.count ?? 0;
+  const masteredProgress = (masteredResult.data ?? []) as {
+    lessons: { unit_id: string | null } | null;
+  }[];
+  const masteredCount = masteredProgress.filter(
+    (p) => p.lessons?.unit_id != null
+  ).length;
   const domainsUnlocked = masteredCount >= DOMAIN_UNLOCK_MASTERED_LESSONS;
   const selectedDomains = (selectedDomainsResult.data ?? []) as {
     domain_id: string;

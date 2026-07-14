@@ -13,9 +13,11 @@ export default async function EnfoquesPage() {
   } = await supabase.auth.getUser();
 
   const [masteredResult, domainsResult, selectionsResult] = await Promise.all([
+    // Rutas de Enfoque lessons (lessons.unit_id is null) must never count
+    // toward unlocking Rutas de Enfoque — filtered in JS below.
     supabase
       .from("user_progress")
-      .select("id", { count: "exact", head: true })
+      .select("id, score, lessons(unit_id)")
       .eq("user_id", user!.id)
       .eq("status", "completed")
       .gte("score", MASTERY_THRESHOLD),
@@ -27,7 +29,12 @@ export default async function EnfoquesPage() {
     supabase.from("user_domains").select("domain_id").eq("user_id", user!.id),
   ]);
 
-  const masteredCount = masteredResult.count ?? 0;
+  const masteredProgress = (masteredResult.data ?? []) as {
+    lessons: { unit_id: string | null } | null;
+  }[];
+  const masteredCount = masteredProgress.filter(
+    (p) => p.lessons?.unit_id != null
+  ).length;
   const unlocked = masteredCount >= DOMAIN_UNLOCK_MASTERED_LESSONS;
   const domains = (domainsResult.data ?? []) as {
     id: string;

@@ -50,7 +50,7 @@ export async function POST(request: Request) {
       .eq("user_id", user.id)
       .eq("lesson_id", lessonId)
       .single(),
-    supabase.from("lessons").select("xp_reward").eq("id", lessonId).single(),
+    supabase.from("lessons").select("xp_reward, unit_id").eq("id", lessonId).single(),
     supabase
       .from("user_stats")
       .select("total_xp, total_lessons_completed, current_streak, longest_streak, last_activity_date")
@@ -58,9 +58,16 @@ export async function POST(request: Request) {
       .single(),
   ]);
 
+  // Rutas de Enfoque (domain) lessons have no unit_id — they're supplementary
+  // practice and must never feed XP, streak, or achievements, or they'd
+  // inflate progress on the core CEFR path they're explicitly meant not to
+  // touch.
+  const isCorePathLesson = lessonResult.data?.unit_id != null;
+
   const isFirstCompletion =
     !existingResult.data || existingResult.data.status !== "completed";
-  const xpEarned = isFirstCompletion ? (lessonResult.data?.xp_reward ?? 10) : 0;
+  const xpEarned =
+    isFirstCompletion && isCorePathLesson ? (lessonResult.data?.xp_reward ?? 10) : 0;
   const stats = statsResult.data;
 
   // On replay, keep the best score ever achieved so a bad replay session
@@ -79,6 +86,10 @@ export async function POST(request: Request) {
     },
     { onConflict: "user_id,lesson_id" }
   );
+
+  if (!isCorePathLesson) {
+    return NextResponse.json({ xpEarned: 0, newAchievements: [] });
+  }
 
   const streakUpdate = stats
     ? calcStreak(stats.last_activity_date, stats.current_streak, stats.longest_streak)
