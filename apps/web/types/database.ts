@@ -378,7 +378,8 @@ export type ExerciseType =
   | "reverse_translation"
   | "word_bank_fill"
   | "error_correction"
-  | "dialogue_fill";
+  | "dialogue_fill"
+  | "minimal_pairs";
 
 export type ProgressStatus = "not_started" | "in_progress" | "completed";
 

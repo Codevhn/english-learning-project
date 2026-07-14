@@ -16,6 +16,7 @@ import { ReverseTranslation } from "@/components/exercises/ReverseTranslation";
 import { WordBankFill } from "@/components/exercises/WordBankFill";
 import { ErrorCorrection } from "@/components/exercises/ErrorCorrection";
 import { DialogueFill } from "@/components/exercises/DialogueFill";
+import { MinimalPairs } from "@/components/exercises/MinimalPairs";
 import { LessonComplete } from "@/components/lesson/LessonComplete";
 import { LessonLearnScreen, type TheoryContent } from "@/components/lesson/LessonLearnScreen";
 import { Button } from "@/components/ui/Button";
@@ -405,6 +406,18 @@ export function LessonPlayer({
             />
           )}
 
+          {currentExercise.exercise_type === "minimal_pairs" && (
+            <MinimalPairs
+              key={queue[0]}
+              instruction={prompt.text}
+              audioText={prompt.audio_text ?? correctAnswer.text ?? ""}
+              correctAnswer={correctAnswer.text ?? ""}
+              distractor={distractors?.[0] ?? ""}
+              onAnswer={handleAnswer}
+              disabled={isDisabled}
+            />
+          )}
+
           {![
             "multiple_choice",
             "flashcard",
@@ -419,6 +432,7 @@ export function LessonPlayer({
             "word_bank_fill",
             "error_correction",
             "dialogue_fill",
+            "minimal_pairs",
           ].includes(currentExercise.exercise_type) && (
             <div className="text-center">
               <p className="text-[15px] text-[#555555] mb-6">

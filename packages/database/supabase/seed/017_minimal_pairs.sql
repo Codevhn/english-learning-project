@@ -1,0 +1,20 @@
+-- 017_minimal_pairs.sql
+-- First content using the new "minimal_pairs" exercise type
+-- (see migrations/009_exercise_type_minimal_pairs.sql — run that migration first)
+-- Adds module 14 L7 (Pares Mínimos: Sonidos Parecidos)
+-- Trains the short/long vowel distinction taught in module 1 L1 and L4.
+
+DELETE FROM exercises WHERE lesson_id = '00000002-0000-0000-0014-000000000007';
+DELETE FROM lessons WHERE id = '00000002-0000-0000-0014-000000000007';
+
+INSERT INTO lessons (id, module_id, unit_id, order_index, slug, title, description, lesson_type, xp_reward, estimated_minutes, theory_content, is_published) VALUES
+('00000002-0000-0000-0014-000000000007', '00000001-0000-0000-0000-000000000014', '00000000-0000-0000-0001-000000000001', 7, 'pares-minimos-sonidos-parecidos', '{"es": "Pares Mínimos: Sonidos Parecidos", "en": "Minimal Pairs: Similar Sounds"}'::jsonb, '{"es": "Entrena tu oído para distinguir pares de palabras que suenan casi igual, como ship/sheep o bit/beat.", "en": "Train your ear to tell apart word pairs that sound almost the same, like ship/sheep or bit/beat."}'::jsonb, 'listening', 25, 12, '{"intro": "Recuerda la lección de las vocales cortas y largas del Módulo 1: en inglés, cambiar la duración de una vocal puede cambiar completamente el significado de una palabra. Aquí vas a practicar distinguiendo esos pares de oído, sin ver el texto primero.", "sections": [{"type": "note", "variant": "tip", "text": "Estos pares son de los más difíciles para hispanohablantes porque en español la duración de la vocal no cambia el significado de una palabra. En inglés sí — ''ship'' (barco) y ''sheep'' (oveja) son palabras completamente distintas."}]}'::jsonb, true);
+
+INSERT INTO exercises (id, lesson_id, order_index, exercise_type, prompt, correct_answer, distractors, explanation) VALUES
+('00000003-0014-0007-0001-000000000001', '00000002-0000-0000-0014-000000000007', 1, 'minimal_pairs', '{"text": "Escucha y elige la palabra que oíste.", "audio_text": "ship"}'::jsonb, '{"text": "ship"}'::jsonb, '["sheep"]'::jsonb, '{"es": "''Ship'' (barco) tiene la I corta /ɪ/. ''Sheep'' (oveja) tiene la EE larga /iː/."}'::jsonb),
+('00000003-0014-0007-0002-000000000001', '00000002-0000-0000-0014-000000000007', 2, 'minimal_pairs', '{"text": "Escucha y elige la palabra que oíste.", "audio_text": "beat"}'::jsonb, '{"text": "beat"}'::jsonb, '["bit"]'::jsonb, '{"es": "''Beat'' (golpe/ritmo) tiene la EE larga /iː/. ''Bit'' (pedacito) tiene la I corta /ɪ/."}'::jsonb),
+('00000003-0014-0007-0003-000000000001', '00000002-0000-0000-0014-000000000007', 3, 'minimal_pairs', '{"text": "Escucha y elige la palabra que oíste.", "audio_text": "leave"}'::jsonb, '{"text": "leave"}'::jsonb, '["live"]'::jsonb, '{"es": "''Leave'' (irse) tiene la EE larga /iː/. ''Live'' (vivir) tiene la I corta /ɪ/."}'::jsonb),
+('00000003-0014-0007-0004-000000000001', '00000002-0000-0000-0014-000000000007', 4, 'minimal_pairs', '{"text": "Escucha y elige la palabra que oíste.", "audio_text": "sit"}'::jsonb, '{"text": "sit"}'::jsonb, '["seat"]'::jsonb, '{"es": "''Sit'' (sentarse) tiene la I corta /ɪ/. ''Seat'' (asiento) tiene la EE larga /iː/."}'::jsonb),
+('00000003-0014-0007-0005-000000000001', '00000002-0000-0000-0014-000000000007', 5, 'minimal_pairs', '{"text": "Escucha y elige la palabra que oíste.", "audio_text": "hill"}'::jsonb, '{"text": "hill"}'::jsonb, '["heel"]'::jsonb, '{"es": "''Hill'' (colina) tiene la I corta /ɪ/. ''Heel'' (talón) tiene la EE larga /iː/."}'::jsonb),
+('00000003-0014-0007-0006-000000000001', '00000002-0000-0000-0014-000000000007', 6, 'minimal_pairs', '{"text": "Escucha y elige la palabra que oíste.", "audio_text": "cheap"}'::jsonb, '{"text": "cheap"}'::jsonb, '["chip"]'::jsonb, '{"es": "''Cheap'' (barato) tiene la EE larga /iː/. ''Chip'' (papa frita/chip) tiene la I corta /ɪ/."}'::jsonb),
+('00000003-0014-0007-0007-000000000001', '00000002-0000-0000-0014-000000000007', 7, 'minimal_pairs', '{"text": "Escucha y elige la palabra que oíste.", "audio_text": "fill"}'::jsonb, '{"text": "fill"}'::jsonb, '["feel"]'::jsonb, '{"es": "''Fill'' (llenar) tiene la I corta /ɪ/. ''Feel'' (sentir) tiene la EE larga /iː/."}'::jsonb);
