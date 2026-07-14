@@ -19,13 +19,13 @@ export default async function AppLayout({
 
   const profileResult = await supabase
     .from("profiles")
-    .select("display_name, avatar_url")
+    .select("display_name, avatar_url, is_admin")
     .eq("id", user.id)
     .single();
 
   const profile = profileResult.data as Pick<
     Tables<"profiles">,
-    "display_name" | "avatar_url"
+    "display_name" | "avatar_url" | "is_admin"
   > | null;
 
   return (
@@ -33,6 +33,7 @@ export default async function AppLayout({
       <AppNav
         displayName={profile?.display_name ?? user.email ?? ""}
         avatarUrl={profile?.avatar_url}
+        isAdmin={profile?.is_admin ?? false}
       />
       <main className="flex-1 mx-auto w-full max-w-5xl px-6 py-8">
         {children}

@@ -40,6 +40,7 @@ export interface Database {
           ui_language?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       courses: {
         Row: {
@@ -71,6 +72,7 @@ export interface Database {
           cover_image_url?: string | null;
           is_published?: boolean;
         };
+        Relationships: [];
       };
       units: {
         Row: {
@@ -103,11 +105,13 @@ export interface Database {
           icon?: string | null;
           is_published?: boolean;
         };
+        Relationships: [];
       };
       lessons: {
         Row: {
           id: string;
-          unit_id: string;
+          unit_id: string | null;
+          module_id: string | null;
           order_index: number;
           slug: string;
           title: Json;
@@ -115,11 +119,13 @@ export interface Database {
           lesson_type: string;
           xp_reward: number;
           estimated_minutes: number;
+          theory_content: Json | null;
           is_published: boolean;
         };
         Insert: {
           id?: string;
-          unit_id: string;
+          unit_id?: string | null;
+          module_id?: string | null;
           order_index: number;
           slug: string;
           title: Json;
@@ -127,17 +133,102 @@ export interface Database {
           lesson_type: string;
           xp_reward?: number;
           estimated_minutes?: number;
+          theory_content?: Json | null;
           is_published?: boolean;
         };
         Update: {
+          unit_id?: string | null;
+          module_id?: string | null;
           order_index?: number;
+          slug?: string;
           title?: Json;
           description?: Json;
           lesson_type?: string;
           xp_reward?: number;
           estimated_minutes?: number;
+          theory_content?: Json | null;
           is_published?: boolean;
         };
+        Relationships: [];
+      };
+      modules: {
+        Row: {
+          id: string;
+          unit_id: string | null;
+          domain_id: string | null;
+          order_index: number;
+          slug: string;
+          title: Json;
+          description: Json;
+          is_published: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          unit_id?: string | null;
+          domain_id?: string | null;
+          order_index: number;
+          slug: string;
+          title: Json;
+          description?: Json;
+          is_published?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          unit_id?: string | null;
+          domain_id?: string | null;
+          order_index?: number;
+          slug?: string;
+          title?: Json;
+          description?: Json;
+          is_published?: boolean;
+        };
+        Relationships: [];
+      };
+      domains: {
+        Row: {
+          id: string;
+          slug: string;
+          title: Json;
+          description: Json;
+          icon: string;
+          order_index: number;
+          is_published: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          slug: string;
+          title: Json;
+          description?: Json;
+          icon: string;
+          order_index: number;
+          is_published?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          slug?: string;
+          title?: Json;
+          description?: Json;
+          icon?: string;
+          order_index?: number;
+          is_published?: boolean;
+        };
+        Relationships: [];
+      };
+      user_domains: {
+        Row: {
+          user_id: string;
+          domain_id: string;
+          selected_at: string;
+        };
+        Insert: {
+          user_id: string;
+          domain_id: string;
+          selected_at?: string;
+        };
+        Update: never;
+        Relationships: [];
       };
       exercises: {
         Row: {
@@ -171,6 +262,7 @@ export interface Database {
           created_at?: string;
         };
         Update: {
+          lesson_id?: string;
           order_index?: number;
           exercise_type?: ExerciseType;
           prompt?: Json;
@@ -182,6 +274,7 @@ export interface Database {
           difficulty?: number;
           tags?: string[];
         };
+        Relationships: [];
       };
       vocabulary: {
         Row: {
@@ -221,6 +314,7 @@ export interface Database {
           example_sentence?: Json | null;
           tags?: string[];
         };
+        Relationships: [];
       };
       user_progress: {
         Row: {
@@ -252,6 +346,7 @@ export interface Database {
           completed_at?: string | null;
           updated_at?: string;
         };
+        Relationships: [];
       };
       user_exercise_history: {
         Row: {
@@ -281,11 +376,14 @@ export interface Database {
           repetitions?: number;
         };
         Update: {
+          was_correct?: boolean;
+          answered_at?: string;
           ease_factor?: number;
           interval_days?: number;
           next_review_at?: string;
           repetitions?: number;
         };
+        Relationships: [];
       };
       user_stats: {
         Row: {
@@ -317,6 +415,7 @@ export interface Database {
           total_words_learned?: number;
           updated_at?: string;
         };
+        Relationships: [];
       };
       achievements: {
         Row: {
@@ -344,6 +443,7 @@ export interface Database {
           condition_type?: string;
           condition_value?: number;
         };
+        Relationships: [];
       };
       user_achievements: {
         Row: {
@@ -357,6 +457,7 @@ export interface Database {
           earned_at?: string;
         };
         Update: never;
+        Relationships: [];
       };
     };
     Views: Record<string, never>;

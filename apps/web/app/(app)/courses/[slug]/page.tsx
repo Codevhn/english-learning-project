@@ -97,11 +97,11 @@ export default async function CourseDetailPage({ params }: Props) {
     lessonsByModule.get(l.module_id!)!.push(l);
   }
 
-  // Group modules by unit_id
+  // Group modules by unit_id (this query only fetches unit-owned modules)
   const modulesByUnit = new Map<string, typeof modules>();
   for (const m of modules ?? []) {
-    if (!modulesByUnit.has(m.unit_id)) modulesByUnit.set(m.unit_id, []);
-    modulesByUnit.get(m.unit_id)!.push(m);
+    if (!modulesByUnit.has(m.unit_id!)) modulesByUnit.set(m.unit_id!, []);
+    modulesByUnit.get(m.unit_id!)!.push(m);
   }
 
   const titleObj = course.title as Record<string, string> | null;

@@ -9,6 +9,7 @@ import { useRouter } from "next/navigation";
 interface AppNavProps {
   displayName: string;
   avatarUrl?: string | null;
+  isAdmin?: boolean;
 }
 
 const navItems = [
@@ -19,9 +20,10 @@ const navItems = [
   { href: "/leaderboard", label: "Ranking" },
 ];
 
-export function AppNav({ displayName, avatarUrl }: AppNavProps) {
+export function AppNav({ displayName, avatarUrl, isAdmin }: AppNavProps) {
   const pathname = usePathname();
   const router = useRouter();
+  const items = isAdmin ? [...navItems, { href: "/admin", label: "Admin" }] : navItems;
 
   async function handleSignOut() {
     const supabase = createClient();
@@ -41,7 +43,7 @@ export function AppNav({ displayName, avatarUrl }: AppNavProps) {
             Parlo
           </Link>
           <nav className="hidden sm:flex items-center gap-1">
-            {navItems.map((item) => {
+            {items.map((item) => {
               const isActive =
                 pathname === item.href ||
                 (item.href !== "/dashboard" && pathname.startsWith(item.href));

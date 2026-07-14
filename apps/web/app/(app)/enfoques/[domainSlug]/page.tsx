@@ -77,8 +77,8 @@ export default async function DomainDetailPage({ params }: Props) {
 
   const lessonsByModule = new Map<string, typeof lessons>();
   for (const l of lessons ?? []) {
-    if (!lessonsByModule.has(l.module_id)) lessonsByModule.set(l.module_id, []);
-    lessonsByModule.get(l.module_id)!.push(l);
+    if (!lessonsByModule.has(l.module_id!)) lessonsByModule.set(l.module_id!, []);
+    lessonsByModule.get(l.module_id!)!.push(l);
   }
 
   const titleObj = domain.title as Record<string, string> | null;
