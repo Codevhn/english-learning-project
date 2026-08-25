@@ -105,7 +105,15 @@ export interface Database {
           icon?: string | null;
           is_published?: boolean;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "units_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          }
+        ];
       };
       lessons: {
         Row: {
@@ -149,7 +157,22 @@ export interface Database {
           theory_content?: Json | null;
           is_published?: boolean;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "lessons_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lessons_module_id_fkey"
+            columns: ["module_id"]
+            isOneToOne: false
+            referencedRelation: "modules"
+            referencedColumns: ["id"]
+          }
+        ];
       };
       modules: {
         Row: {
@@ -186,7 +209,22 @@ export interface Database {
           can_do_statements?: Json;
           is_published?: boolean;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "modules_unit_id_fkey"
+            columns: ["unit_id"]
+            isOneToOne: false
+            referencedRelation: "units"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "modules_domain_id_fkey"
+            columns: ["domain_id"]
+            isOneToOne: false
+            referencedRelation: "domains"
+            referencedColumns: ["id"]
+          }
+        ];
       };
       domains: {
         Row: {
@@ -231,7 +269,22 @@ export interface Database {
           selected_at?: string;
         };
         Update: never;
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "user_domains_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_domains_domain_id_fkey"
+            columns: ["domain_id"]
+            isOneToOne: false
+            referencedRelation: "domains"
+            referencedColumns: ["id"]
+          }
+        ];
       };
       exercises: {
         Row: {
@@ -277,7 +330,15 @@ export interface Database {
           difficulty?: number;
           tags?: string[];
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "exercises_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          }
+        ];
       };
       vocabulary: {
         Row: {
@@ -317,7 +378,15 @@ export interface Database {
           example_sentence?: Json | null;
           tags?: string[];
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "vocabulary_course_id_fkey"
+            columns: ["course_id"]
+            isOneToOne: false
+            referencedRelation: "courses"
+            referencedColumns: ["id"]
+          }
+        ];
       };
       user_progress: {
         Row: {
@@ -349,7 +418,22 @@ export interface Database {
           completed_at?: string | null;
           updated_at?: string;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "user_progress_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_progress_lesson_id_fkey"
+            columns: ["lesson_id"]
+            isOneToOne: false
+            referencedRelation: "lessons"
+            referencedColumns: ["id"]
+          }
+        ];
       };
       user_exercise_history: {
         Row: {
@@ -386,7 +470,29 @@ export interface Database {
           next_review_at?: string;
           repetitions?: number;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "user_exercise_history_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_exercise_history_exercise_id_fkey"
+            columns: ["exercise_id"]
+            isOneToOne: false
+            referencedRelation: "exercises"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_exercise_history_vocabulary_id_fkey"
+            columns: ["vocabulary_id"]
+            isOneToOne: false
+            referencedRelation: "vocabulary"
+            referencedColumns: ["id"]
+          }
+        ];
       };
       user_stats: {
         Row: {
@@ -418,7 +524,15 @@ export interface Database {
           total_words_learned?: number;
           updated_at?: string;
         };
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "user_stats_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          }
+        ];
       };
       achievements: {
         Row: {
@@ -460,11 +574,48 @@ export interface Database {
           earned_at?: string;
         };
         Update: never;
-        Relationships: [];
+        Relationships: [
+          {
+            foreignKeyName: "user_achievements_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "user_achievements_achievement_id_fkey"
+            columns: ["achievement_id"]
+            isOneToOne: false
+            referencedRelation: "achievements"
+            referencedColumns: ["id"]
+          }
+        ];
       };
     };
     Views: Record<string, never>;
-    Functions: Record<string, never>;
+    Functions: {
+      record_answer: {
+        Args: {
+          p_exercise_id: string;
+          p_was_correct: boolean;
+          p_ease_factor: number;
+          p_interval_days: number;
+          p_repetitions: number;
+          p_next_review_at: string;
+          p_response_time_ms?: number;
+          p_vocabulary_id?: string | null;
+        };
+        Returns: undefined;
+      };
+      complete_lesson_secure: {
+        Args: { p_lesson_id: string; p_score: number };
+        Returns: undefined;
+      };
+      update_streak: {
+        Args: { p_user_id: string };
+        Returns: undefined;
+      };
+    };
     Enums: Record<string, never>;
   };
 }

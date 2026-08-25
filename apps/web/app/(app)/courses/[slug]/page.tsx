@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/Badge";
 import { Lock, Award } from "lucide-react";
 import { CEFR_COLORS } from "@/lib/levels";
 import { isMastered, passedLevelExam } from "@/lib/mastery";
+import type { Tables } from "@/types/database";
 
 interface Props {
   params: Promise<{ slug: string }>;
@@ -62,7 +63,7 @@ export default async function CourseDetailPage({ params }: Props) {
           .in("unit_id", unitIds)
           .eq("is_published", true)
           .order("order_index")
-      : { data: [] };
+      : { data: [] as Pick<Tables<"modules">, "id" | "unit_id" | "order_index" | "title" | "description">[] };
 
   const moduleIds = (modules ?? []).map((m) => m.id);
 

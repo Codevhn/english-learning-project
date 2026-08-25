@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/Button";
 import { Card, CardContent } from "@/components/ui/Card";
 import { DomainIcon } from "@/lib/domainIcons";
 import { isMastered } from "@/lib/mastery";
+import type { Tables } from "@/types/database";
 
 interface Props {
   params: Promise<{ domainSlug: string }>;
@@ -58,7 +59,7 @@ export default async function DomainDetailPage({ params }: Props) {
           .in("module_id", moduleIds)
           .eq("is_published", true)
           .order("order_index")
-      : { data: [] };
+      : { data: [] as Pick<Tables<"lessons">, "id" | "module_id" | "order_index" | "title" | "xp_reward" | "estimated_minutes">[] };
 
   const lessonIds = (lessons ?? []).map((l) => l.id);
 
@@ -69,7 +70,7 @@ export default async function DomainDetailPage({ params }: Props) {
           .select("lesson_id, status, score")
           .eq("user_id", user.id)
           .in("lesson_id", lessonIds)
-      : { data: [] };
+      : { data: [] as Pick<Tables<"user_progress">, "lesson_id" | "status" | "score">[] };
 
   const progressMap = new Map(
     (progressData ?? []).map((p) => [p.lesson_id, p])
