@@ -38,19 +38,32 @@ export async function POST(request: Request) {
 
   const result = sm2(card, isCorrect ? 4 : 1);
 
-  await supabase.from("user_exercise_history").upsert(
-    {
-      user_id: user.id,
-      exercise_id: exerciseId,
-      was_correct: isCorrect,
-      ease_factor: result.easeFactor,
-      interval_days: result.intervalDays,
-      repetitions: result.repetitions,
-      next_review_at: result.nextReviewAt.toISOString(),
-      answered_at: new Date().toISOString(),
-    },
-    { onConflict: "user_id,exercise_id" }
-  );
+  // Atomic upsert via RPC — no read-modify-write race. If the migration
+  // hasn't been applied yet, fall back to the direct upsert.
+  const { error } = await supabase.rpc("record_answer", {
+    p_exercise_id: exerciseId,
+    p_was_correct: !!isCorrect,
+    p_ease_factor: result.easeFactor,
+    p_interval_days: result.intervalDays,
+    p_repetitions: result.repetitions,
+    p_next_review_at: result.nextReviewAt.toISOString(),
+  });
+
+  if (error) {
+    await supabase.from("user_exercise_history").upsert(
+      {
+        user_id: user.id,
+        exercise_id: exerciseId,
+        was_correct: isCorrect,
+        ease_factor: result.easeFactor,
+        interval_days: result.intervalDays,
+        repetitions: result.repetitions,
+        next_review_at: result.nextReviewAt.toISOString(),
+        answered_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id,exercise_id" }
+    );
+  }
 
   return NextResponse.json({ ok: true });
 }

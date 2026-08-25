@@ -65,6 +65,23 @@ export async function POST(request: Request) {
   // touch.
   const isCorePathLesson = lessonResult.data?.unit_id != null;
 
+  // Atomic path: the complete_lesson_secure RPC derives xp_reward from
+  // the lessons row server-side (client can't forge XP) and does the
+  // progress upsert + XP/streak update in one DB transaction, immune
+  // to concurrent double-submits. Falls back to the legacy JS flow if
+  // the RPC isn't deployed yet.
+  if (isCorePathLesson) {
+    const { error: rpcError } = await supabase.rpc("complete_lesson_secure", {
+      p_lesson_id: lessonId,
+      p_score: score ?? 0,
+    });
+
+    if (!rpcError) {
+      return NextResponse.json({ xpEarned: 0, newAchievements: [] });
+    }
+    // else: fall through to legacy path below
+  }
+
   const isFirstCompletion =
     !existingResult.data || existingResult.data.status !== "completed";
   const xpEarned =
